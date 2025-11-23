@@ -94,6 +94,12 @@ class PrivacyAnalyzer:
             href_list_for_llm = [link['href'] for link in promising_links]
             link_extraction_result = await link_extractor(html_content, url, href_list_for_llm)
             
+            # If the link extractor found a URL, this is also a valid finding.
+            # This is critical for the main privacy policy search which has no content validator.
+            if link_extraction_result and link_extraction_result.get(f"{link_key}_url"):
+                if not found_policy_info: # Don't overwrite if content was already found on page
+                    found_policy_info = link_extraction_result
+
             return found_policy_info, [link_extraction_phase], promising_links
 
         except Exception as e:
