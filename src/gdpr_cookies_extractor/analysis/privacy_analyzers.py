@@ -4,6 +4,7 @@ import re
 import os
 from urllib.parse import urljoin, urlparse
 from typing import Dict, Any, List, Optional, Tuple, Callable, Coroutine
+import asyncio
 
 from .llm_interface import AbstractLLMClient
 from .models import LinkExtractionPhase
