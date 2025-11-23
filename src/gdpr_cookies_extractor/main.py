@@ -31,7 +31,7 @@ def sanitize_filename(url: str) -> str:
     return sanitized
 
 
-async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: str, scenario: str, site_dump_folder: str, search_keywords_config: Dict[str, List[str]]) -> SiteAnalysisResult:
+async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: str, scenario: str, site_dump_folder: str, search_keywords_config: Dict[str, List[str]], scraper_config: Dict[str, Any]) -> SiteAnalysisResult:
     """
     Runs the full analysis for a single site and a single cookie scenario.
     Returns a SiteAnalysisResult object.
@@ -39,6 +39,11 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
     try:
         set_log_context(site_url, scenario)
         logger.info(f"Processing: {site_url} (Scenario: {scenario})")
+        
+        # Extract scraper params
+        max_hops = scraper_config.get('max_hops', 1)
+        fan_out = scraper_config.get('fan_out', 1)
+
         async with await context.new_page() as page:
             # Navigation and Cookie Handling 
             await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
@@ -64,6 +69,8 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
             llm_output, privacy_policy_links = await analyzer.find_privacy_policy(
                 context, current_url, site_dump_folder,
                 filter_keywords=search_keywords_config.get('privacy_policy', []),
+                max_hops=max_hops,
+                fan_out=fan_out
             )
 
             simple_extractor_links = {"privacy_policy": privacy_policy_links}
@@ -133,14 +140,14 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
             )
 
     except Exception as e:
-        logger.error(f"FATAL Error processing {site_url} ('{scenario}'): {e}")
+        logger.error(f"FATAL Error processing {site_url} ('{scenario}'): {e}", exc_info=True)
         return SiteAnalysisResult.from_exception(site_url, scenario, e)
     finally:
         clear_log_context()
         if context:
             await context.close()
 
-async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]]) -> List[SiteAnalysisResult]:
+async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], scraper_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
     """
     Creates and runs all analysis tasks concurrently.
     """
@@ -167,7 +174,7 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"
             )
             tasks.append(
-                process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
+                process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config, scraper_config)
             )
     
     results = await asyncio.gather(*tasks)
@@ -218,7 +225,7 @@ def load_scraper_config():
         return config['scraper']
     except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
         logger.warning(f"Could not load scraper config from config.json: {e}. Using default.")
-        return {"max_hops": 3}
+        return {"max_hops": 1, "fan_out": 1}
 
 
 def load_user_defined_keywords():
@@ -246,15 +253,13 @@ async def gdpr_analysis(sites_df):
     llm_provider = OllamaProvider(model=llm_config.get('model', 'llama3'))
     analyzer = PrivacyAnalyzer(
         llm_client=llm_provider,
-        timestamp=timestamp,
-        max_hops=scraper_config.get('max_hops', 3)
+        timestamp=timestamp
     )
-    
     
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         
-        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config)
+        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config, scraper_config)
         
         await browser.close()
     

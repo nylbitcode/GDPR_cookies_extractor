@@ -3,7 +3,8 @@
     "model": "llama3"
   },
   "scraper": {
-    "max_hops": 5,
+    "max_hops": 2,
+    "fan_out": 2,
     "cookie_banners": {
       "accept_selectors": [
         "text=Accept",
