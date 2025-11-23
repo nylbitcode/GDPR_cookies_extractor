@@ -85,25 +85,33 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
                     context, 
                     full_privacy_policy_url,
                     site_dump_folder,
-                    search_keywords_config=search_keywords_config
+                    search_keywords_config=search_keywords_config,
+                    max_hops=max_hops,
+                    fan_out=fan_out
                 )
                 data_retention_task = analyzer.find_data_retention_page(
                     context,
                     full_privacy_policy_url,
                     site_dump_folder,
-                    search_keywords_config=search_keywords_config
+                    search_keywords_config=search_keywords_config,
+                    max_hops=max_hops,
+                    fan_out=fan_out
                 )
                 data_deletion_task = analyzer.find_data_deletion_page(
                     context,
                     full_privacy_policy_url,
                     site_dump_folder,
-                    search_keywords_config=search_keywords_config
+                    search_keywords_config=search_keywords_config,
+                    max_hops=max_hops,
+                    fan_out=fan_out
                 )
                 dpo_task = analyzer.find_dpo_page(
                     context,
                     full_privacy_policy_url,
                     site_dump_folder,
-                    search_keywords_config=search_keywords_config
+                    search_keywords_config=search_keywords_config,
+                    max_hops=max_hops,
+                    fan_out=fan_out
                 )
 
                 results = await asyncio.gather(cookie_declaration_task, data_retention_task, data_deletion_task, dpo_task)
