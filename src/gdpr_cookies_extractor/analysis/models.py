@@ -3,6 +3,13 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 
 @dataclass
+class LinkExtractionPhase:
+    main_link: str
+    phase: str
+    all_extracted_links: List[Dict[str, str]] = field(default_factory=list)
+    promising_extracted_links: List[str] = field(default_factory=list)
+
+@dataclass
 class SiteAnalysisResult:
     # Core Info
     website_url: str
