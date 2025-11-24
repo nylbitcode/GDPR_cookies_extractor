@@ -22,6 +22,10 @@ def load_selectors_from_config():
             "reject_selectors": [
                 "text=Reject", "text=Reject All", "text=Deny",
                 "role=button[name='Reject']", "role=button[name='Reject All']", "role=button[name='Deny']"
+            ],
+            "only_essential_selectors": [
+                "text=Only Essential", "text=Essential Cookies", "text=Accept Essential",
+                "role=button[name='Only Essential']", "role=button[name='Essential Cookies']", "role=button[name='Accept Essential']"
             ]
         }
 
@@ -32,8 +36,16 @@ async def handle_cookie_banner(page, action="accept"):
     selectors_config = load_selectors_from_config()
     accept_selectors = selectors_config.get("accept_selectors", [])
     reject_selectors = selectors_config.get("reject_selectors", [])
+    only_essential_selectors = selectors_config.get("only_essential_selectors", [])
 
-    target_selectors = accept_selectors if action == "accept" else reject_selectors
+    if action == "accept":
+        target_selectors = accept_selectors
+    elif action == "reject":
+        target_selectors = reject_selectors
+    elif action == "only_essential":
+        target_selectors = only_essential_selectors
+    else:
+        target_selectors = []
 
     for selector in target_selectors:
         try:

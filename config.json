@@ -20,6 +20,14 @@
         "role=button[name='Reject']",
         "role=button[name='Reject All']",
         "role=button[name='Deny']"
+      ],
+      "only_essential_selectors": [
+        "text=Only Essential",
+        "text=Essential Cookies",
+        "text=Accept Essential",
+        "role=button[name='Only Essential']",
+        "role=button[name='Essential Cookies']",
+        "role=button[name='Accept Essential']"
       ]
     }
   },

@@ -145,7 +145,7 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
     Creates and runs all analysis tasks concurrently.
     """
     tasks = []
-    scenarios = ["accept"]
+    scenarios = ["accept", "reject", "only_essential"]
     base_dump_dir = f"output/dumps/analysis_results_{timestamp}"
 
 
