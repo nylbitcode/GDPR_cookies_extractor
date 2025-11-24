@@ -36,138 +36,149 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
     Runs the full analysis for a single site and a single cookie scenario.
     Returns a SiteAnalysisResult object.
     """
+    page = None
     try:
         set_log_context(site_url, scenario)
         logger.info(f"Processing: {site_url} (Scenario: {scenario})")
-        async with await context.new_page() as page:
-            # Navigation and Cookie Handling 
-            await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
-            await handle_cookie_banner(page, action=scenario)
-            await page.wait_for_timeout(3000)  # Give the page time to process the click
+        
+        page = await context.new_page()
+        
+        # Navigation and Cookie Handling 
+        await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
+        
+        # For "initial" scan, we don't click anything. For others, we click.
+        if scenario != "initial":
+            await handle_cookie_banner(page, action=scenario, click=True)
+        
+        await page.wait_for_timeout(3000)
 
-            # Get the final URL after potential redirects from navigation or cookie banners
-            current_url = page.url
-            logger.info(f"Final URL after navigation: {current_url}")
+        # Get the final URL after potential redirects
+        current_url = page.url
+        logger.info(f"Final URL after navigation/action: {current_url}")
 
-            cookies = await page.context.cookies()
-            logger.info(f"[{scenario}] Captured {len(cookies)} cookies for {current_url}.")
+        cookies = await page.context.cookies()
+        logger.info(f"[{scenario}] Captured {len(cookies)} cookies for {current_url}.")
 
-            # Cookie Analysis ---
-            simplified_cookies = simplify_cookies(cookies)
+        # --- Main Analysis Logic ---
+        simplified_cookies = simplify_cookies(cookies)
+        cookie_categories = await analyzer.categorize_cookies(simplified_cookies)
+        third_party_count = count_third_party_cookies(current_url, cookies)
 
-            logger.debug("Categorizing cookies...")
-            cookie_categories = await analyzer.categorize_cookies(simplified_cookies)
+        llm_output, privacy_policy_links = await analyzer.find_privacy_policy(
+            context, current_url, site_dump_folder,
+            filter_keywords=search_keywords_config.get('privacy_policy', []),
+        )
 
-            third_party_count = count_third_party_cookies(current_url, cookies)
+        simple_extractor_links = {"privacy_policy": privacy_policy_links}
+        analyses_results = {}
+        full_privacy_policy_url = None
+        
+        if llm_output.get("privacy_policy_url"):
+            policy_url_path = llm_output.get("privacy_policy_url")
+            full_privacy_policy_url = urljoin(current_url, policy_url_path)
 
-            # Find Privacy Policy Page
-            llm_output, privacy_policy_links = await analyzer.find_privacy_policy(
-                context, current_url, site_dump_folder,
-                filter_keywords=search_keywords_config.get('privacy_policy', []),
-            )
+            # Gather all sub-analysis tasks
+            sub_analysis_tasks = []
+            analysis_types = ["cookie_declaration", "data_retention", "data_deletion", "dpo"]
+            find_methods = {
+                "cookie_declaration": analyzer.find_cookie_declaration_page,
+                "data_retention": analyzer.find_data_retention_page,
+                "data_deletion": analyzer.find_data_deletion_page,
+                "dpo": analyzer.find_dpo_page,
+            }
 
-            simple_extractor_links = {"privacy_policy": privacy_policy_links}
-            analyses_results = {}
-            full_privacy_policy_url = None
-            
-            if llm_output.get("privacy_policy_url"):
-                policy_url_path = llm_output.get("privacy_policy_url")
-                full_privacy_policy_url = urljoin(current_url, policy_url_path)
-
-                cookie_declaration_task = analyzer.find_cookie_declaration_page(
+            for analysis_type in analysis_types:
+                task = find_methods[analysis_type](
                     context, 
                     full_privacy_policy_url,
                     site_dump_folder,
                     search_keywords_config=search_keywords_config
                 )
-                data_retention_task = analyzer.find_data_retention_page(
-                    context,
-                    full_privacy_policy_url,
-                    site_dump_folder,
-                    search_keywords_config=search_keywords_config
-                )
-                data_deletion_task = analyzer.find_data_deletion_page(
-                    context,
-                    full_privacy_policy_url,
-                    site_dump_folder,
-                    search_keywords_config=search_keywords_config
-                )
-                dpo_task = analyzer.find_dpo_page(
-                    context,
-                    full_privacy_policy_url,
-                    site_dump_folder,
-                    search_keywords_config=search_keywords_config
-                )
-
-                results = await asyncio.gather(cookie_declaration_task, data_retention_task, data_deletion_task, dpo_task)
-                
-                cookie_decl_res, cookie_decl_links = results[0]
-                data_retention_res, data_retention_links = results[1]
-                data_deletion_res, data_deletion_links = results[2]
-                dpo_res, dpo_links = results[3]
-
-                simple_extractor_links["cookie_declaration"] = cookie_decl_links
-                simple_extractor_links["data_retention"] = data_retention_links
-                simple_extractor_links["data_deletion"] = data_deletion_links
-                simple_extractor_links["dpo"] = dpo_links
-                
-                # Collect results into the extensible dictionary
-                analyses_results = {
-                    "cookie_declaration": cookie_decl_res,
-                    "data_retention": data_retention_res,
-                    "data_deletion": data_deletion_res,
-                    "dpo": dpo_res
-                }
+                sub_analysis_tasks.append(task)
             
-            # Format Success Result ---
-            return SiteAnalysisResult.from_outputs(
-                site_url=current_url,
-                scenario=scenario,
-                cookies=cookies,
-                cookie_categories=cookie_categories,
-                third_party_count=third_party_count,
-                llm_output=llm_output,
-                privacy_policy_url=full_privacy_policy_url,
-                simple_extractor_links=simple_extractor_links,
-                **analyses_results
-            )
+            # Run sub-analyses concurrently
+            results = await asyncio.gather(*sub_analysis_tasks)
+            
+            # Process results
+            for i, analysis_type in enumerate(analysis_types):
+                res, links = results[i]
+                simple_extractor_links[analysis_type] = links
+                analyses_results[analysis_type] = res
+
+        return SiteAnalysisResult.from_outputs(
+            site_url=current_url,
+            scenario=scenario,
+            cookies=cookies,
+            cookie_categories=cookie_categories,
+            third_party_count=third_party_count,
+            llm_output=llm_output,
+            privacy_policy_url=full_privacy_policy_url,
+            simple_extractor_links=simple_extractor_links,
+            **analyses_results
+        )
 
     except Exception as e:
-        logger.error(f"FATAL Error processing {site_url} ('{scenario}'): {e}")
+        logger.error(f"FATAL Error processing {site_url} ('{scenario}'): {e}", exc_info=True)
         return SiteAnalysisResult.from_exception(site_url, scenario, e)
     finally:
         clear_log_context()
-        if context:
-            await context.close()
+        if page:
+            await page.close()
+
 
 async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]]) -> List[SiteAnalysisResult]:
     """
-    Creates and runs all analysis tasks concurrently.
+    Orchestrates site analysis with a new, more efficient logic:
+    1.  For each site, first detect which cookie banner options are available.
+    2.  Run an initial "no-click" analysis.
+    3.  Conditionally run analyses for each available option ("accept", "reject", etc.).
     """
     tasks = []
-    scenarios = ["accept", "reject", "only_essential"]
     base_dump_dir = f"output/dumps/analysis_results_{timestamp}"
-
 
     for index, row in sites_df.iterrows():
         site_url = row['website_url']
-        parsed_url = urlparse(site_url)
-        if not parsed_url.scheme:
+        if not urlparse(site_url).scheme:
             site_url = "https://" + site_url
 
         site_dump_folder = os.path.join(base_dump_dir, sanitize_filename(site_url))
+        
+        # --- Detection Phase ---
+        logger.info(f"Detecting available cookie scenarios for {site_url}...")
+        scenarios_to_run = ["initial"] # Always run the initial "no-click" scan
+        
+        detection_context = None
+        try:
+            detection_context = await browser.new_context(locale='it-IT', timezone_id='Europe/Rome')
+            page = await detection_context.new_page()
+            await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
             
-        for scenario in scenarios:
-            # Create a new context for each task to ensure isolation
-            context = await browser.new_context(
+            possible_scenarios = ["accept", "reject", "only_essential"]
+            for scenario_option in possible_scenarios:
+                # Use click=False to only detect the button
+                if await handle_cookie_banner(page, action=scenario_option, click=False):
+                    scenarios_to_run.append(scenario_option)
+            
+            logger.info(f"Scenarios to run for {site_url}: {scenarios_to_run}")
+
+        except Exception as e:
+            logger.error(f"Failed to detect scenarios for {site_url}: {e}. Will only run 'initial'.")
+        finally:
+            if detection_context:
+                await detection_context.close()
+
+        # --- Execution Phase ---
+        for scenario in scenarios_to_run:
+            # Create a new, isolated context for each actual analysis run
+            analysis_context = await browser.new_context(
                 locale='it-IT',
                 timezone_id='Europe/Rome',
-                geolocation={ "longitude": 12.4964, "latitude": 41.9028 },
+                geolocation={"longitude": 12.4964, "latitude": 41.9028},
                 permissions=['geolocation'],
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"
             )
             tasks.append(
-                process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
+                process_site_scenario(analysis_context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
             )
     
     results = await asyncio.gather(*tasks)

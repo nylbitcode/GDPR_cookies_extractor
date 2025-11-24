@@ -29,9 +29,10 @@ def load_selectors_from_config():
             ]
         }
 
-async def handle_cookie_banner(page, action="accept"):
+async def handle_cookie_banner(page, action="accept", click: bool = True):
     """
-    Finds and clicks the cookie banner button based on the desired action.
+    Finds and optionally clicks the cookie banner button based on the desired action.
+    If 'click' is False, it only checks for the button's visibility.
     """
     selectors_config = load_selectors_from_config()
     accept_selectors = selectors_config.get("accept_selectors", [])
@@ -51,15 +52,15 @@ async def handle_cookie_banner(page, action="accept"):
         try:
             button = page.locator(selector)
             
-            # Check if the button is visible with a timeout. Playwright will automatically
-            # wait for the element to appear before giving up.
             if await button.is_visible(timeout=5000):
-                logger.info(f"Clicking '{action}' button with selector: {selector}")
-                await button.click()
-                await page.wait_for_timeout(2000) # Give the page time to process the click
+                if click:
+                    logger.info(f"Clicking '{action}' button with selector: {selector}")
+                    await button.click()
+                    await page.wait_for_timeout(2000)  # Give the page time to process the click
+                else:
+                    logger.info(f"Found '{action}' button with selector: {selector} (no click)")
                 return True
         except Exception:
-            # Continue to the next selector if this one fails
             continue
     
     logger.info(f"No '{action}' button found for this site.")
