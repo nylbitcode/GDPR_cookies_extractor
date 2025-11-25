@@ -36,7 +36,7 @@ class OllamaProvider(AbstractLLMClient):
                 ],
                 format='json',
                 options={
-                    'temperature': 0.0  # avoid hallucinathions!
+                    'temperature': 0.0  # avoid hallucinations!
                 }
             )
 

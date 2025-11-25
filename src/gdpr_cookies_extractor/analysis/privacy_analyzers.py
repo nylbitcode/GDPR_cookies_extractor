@@ -4,9 +4,16 @@ import re
 import os
 from urllib.parse import urljoin, urlparse
 from typing import Dict, Any, List, Optional, Tuple
-from .llm_interface import AbstractLLMClient, LLMResponse 
-import asyncio
-
+from .llm_interface import AbstractLLMClient
+from .models import (
+    ExtractedLink,
+    CookieDeclarationAnalysis,
+    DataRetentionAnalysis,
+    DataDeletionAnalysis,
+    DPOAnalysis,
+    CookieCategory,
+    CategorizedCookie,
+)
 logger = logging.getLogger(__name__)
 
 class PrivacyAnalyzer:
@@ -42,9 +49,8 @@ class PrivacyAnalyzer:
         except Exception as e:
             logger.error(f"Failed to dump snapshot for phase '{phase}': {e}")
 
-
-    async def _extract_policy_url_from_html(self, html_content: str, url: str, promising_links: List[str]):
     # --- Privacy Policy Methods ---
+    async def _extract_policy_url_from_html(self, html_content: str, url: str, promising_links: List[str]):
         """
         Sends HTML content to the LLM to find the privacy policy URL on a single page.
         """
@@ -103,11 +109,11 @@ class PrivacyAnalyzer:
             if not page.url == url:
                 await page.goto(url, timeout=60000, wait_until="domcontentloaded")
 
-            # Step 1: Get all internal links and dump snapshot
+            # Get all internal links and dump snapshot
             all_links_objects = await self._extract_all_internal_links(page)
             await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             
-            # Step 2: Filter for promising links based on keywords
+            # Filter for promising links based on keywords
             promising_links_objects = self._filter_promising_links(all_links_objects, user_keywords)
 
             link_extraction_phases.append({
@@ -126,13 +132,13 @@ class PrivacyAnalyzer:
             html = await page.content()
             html_lower = html.lower()
 
-            # Step 3: Call LLM with a simple list of hrefs for the prompt
+            # Call LLM with a simple list of hrefs for the prompt
             href_list_for_llm = [link['href'] for link in promising_links_objects]
             policy_output = await self._extract_policy_url_from_html(html, url, href_list_for_llm)
             llm_url = policy_output.get("privacy_policy_url")
             logger.debug(f"Returned choice from LLM: {llm_url}")
 
-            # Step 4: Validate the LLM's choice and apply heuristic override if needed
+            # Validate the LLM's choice and apply heuristic override if needed
             if promising_links_objects and llm_url:
                 # Check if the LLM's choice is valid (i.e., it's one of the promising hrefs)
                 is_llm_choice_valid = any(llm_url in link_obj['href'] for link_obj in promising_links_objects)
@@ -151,7 +157,7 @@ class PrivacyAnalyzer:
                     else:
                         logger.warning("Heuristic fallback found no suitable link either.")
             
-            # Step 5: Calculate keyword bonus
+            # Calculate keyword bonus
             keyword_bonus = 0.0
             if user_keywords and any(keyword.lower() in html_lower for keyword in user_keywords):
                 logger.info(f"User keywords found on {url}, applying bonus.")
@@ -159,7 +165,7 @@ class PrivacyAnalyzer:
             
             policy_output['keyword_bonus'] = keyword_bonus
 
-            # Step 6: Ensure the final URL is absolute
+            # Ensure the final URL is absolute
             found_url = policy_output.get("privacy_policy_url")
             if found_url:
                 policy_output["privacy_policy_url"] = urljoin(url, found_url)
@@ -311,10 +317,10 @@ class PrivacyAnalyzer:
     async def find_cookie_declaration_page(self, context, privacy_policy_url: str, site_dump_folder: str, search_keywords_config: Dict[str, List[str]]) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Finds the cookie declaration page using a multi-stage hybrid analysis.
-        1.  Check if the declaration is on the initial privacy policy page.
-        2.  Always try to find a link to a separate, dedicated page.
-        3.  Validate the content of the separate page with another LLM call.
-        4.  Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
+        - Check if the declaration is on the initial privacy policy page.
+        - Always try to find a link to a separate, dedicated page.
+        - Validate the content of the separate page with another LLM call.
+        - Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
         """
         if not privacy_policy_url:
             return {"cookie_declaration_url": None, "reasoning": "No privacy policy URL provided."}, []
@@ -435,9 +441,8 @@ class PrivacyAnalyzer:
         prompt = f"""
         You are an expert in GDPR and web compliance. Your task is to analyze the following text from a web page to determine if it contains a "Data Retention" policy and to summarize the retention period if present.
 
-        1.  **Analyze for Policy:** First, determine if the text contains a specific section about data retention. This is NOT just a brief mention. It should detail how long data is kept. Look for headings like "Data Retention", "How long we keep your data", or "Retention of Personal Information".
-
-        2.  **Extract Retention Period:** If a data retention section is found, carefully read it and extract a concise summary of the data retention periods. For example: "User data is kept for the duration of the account plus 30 days", "Analytics data is retained for 26 months", or "Data is kept as long as necessary for legal and business purposes."
+        - **Analyze for Policy:** First, determine if the text contains a specific section about data retention. This is NOT just a brief mention. It should detail how long data is kept. Look for headings like "Data Retention", "How long we keep your data", or "Retention of Personal Information".
+        - **Extract Retention Period:** If a data retention section is found, carefully read it and extract a concise summary of the data retention periods. For example: "User data is kept for the duration of the account plus 30 days", "Analytics data is retained for 26 months", or "Data is kept as long as necessary for legal and business purposes."
 
         **CRITICAL RULE:** Do NOT invent information. If the text does not explicitly state a retention period or the policy is vague (e.g., "we keep data for as long as needed"), you MUST set the summary to null.
 
@@ -512,10 +517,10 @@ class PrivacyAnalyzer:
     async def find_data_retention_page(self, context, privacy_policy_url: str, site_dump_folder: str, search_keywords_config: Dict[str, List[str]]) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Finds the data retention page using a multi-stage hybrid analysis, mirroring the cookie declaration search logic.
-        1.  Check if the declaration is on the initial privacy policy page.
-        2.  Always try to find a link to a separate, dedicated page.
-        3.  Validate the content of the separate page.
-        4.  Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
+        - Check if the declaration is on the initial privacy policy page.
+        - Always try to find a link to a separate, dedicated page.
+        - Validate the content of the separate page.
+        - Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
         """
         if not privacy_policy_url:
             return {"data_retention_url": None, "reasoning": "No privacy policy URL provided."}, []
@@ -637,9 +642,8 @@ class PrivacyAnalyzer:
         prompt = f"""
         You are an expert in GDPR and web compliance. Your task is to analyze the following text from a web page to determine if it contains a "Data Deletion" policy and to summarize how a user can delete their data.
 
-        1.  **Analyze for Policy:** First, determine if the text contains a specific section about data deletion or user rights to erasure. Look for headings like "Data Deletion", "Your Right to Erasure", "Deleting Your Information", or "Managing Your Data".
-
-        2.  **Extract Deletion Method:** If a data deletion section is found, carefully read it and extract a concise summary of the method for deleting data. For example: "Users can delete their data from their account settings dashboard", "A data deletion request can be sent to privacy@example.com", or "Data is deleted automatically upon account closure."
+        - **Analyze for Policy:** First, determine if the text contains a specific section about data deletion or user rights to erasure. Look for headings like "Data Deletion", "Your Right to Erasure", "Deleting Your Information", or "Managing Your Data".
+        - **Extract Deletion Method:** If a data deletion section is found, carefully read it and extract a concise summary of the method for deleting data. For example: "Users can delete their data from their account settings dashboard", "A data deletion request can be sent to privacy@example.com", or "Data is deleted automatically upon account closure."
 
         **CRITICAL RULE:** Do NOT invent information. If the text does not explicitly state how to delete data, you MUST set the summary to null.
 
@@ -835,9 +839,8 @@ class PrivacyAnalyzer:
         prompt = f"""
         You are an expert in GDPR and web compliance. Your task is to analyze the following text to determine if it contains contact information for a Data Protection Officer (DPO) or a privacy representative.
 
-        1.  **Analyze for DPO Section:** Look for headings like "Data Protection Officer", "DPO", "Privacy Contact", "Data Controller", or "Contact Us for Privacy Matters".
-
-        2.  **Extract Contact Details:** If a relevant section is found, extract a concise summary of the contact methods. This can include:
+        - **Analyze for DPO Section:** Look for headings like "Data Protection Officer", "DPO", "Privacy Contact", "Data Controller", or "Contact Us for Privacy Matters".
+        - **Extract Contact Details:** If a relevant section is found, extract a concise summary of the contact methods. This can include:
             - Email addresses (e.g., dpo@example.com, privacy@example.com)
             - Physical mailing addresses.
             - Links to contact forms.
@@ -1029,10 +1032,13 @@ class PrivacyAnalyzer:
                 await validation_page.close()
 
     # --- Cookie Analysis Methods ---
-    async def categorize_cookies(self, cookies_data: list):
+    async def categorize_cookies(self, cookies_data: list) -> List[CookieCategory]:
         """
         Categorizes a list of cookies using the LLM.
         """
+        if not cookies_data:
+            return []
+
         cookies_json_list = json.dumps(cookies_data, indent=2)
         prompt = f"""
         You are an expert in GDPR compliance and a JSON-only generator.
@@ -1042,23 +1048,23 @@ class PrivacyAnalyzer:
         OUTPUT: A single JSON object, with no other text.
 
         CATEGORIES DEFINITIONS:
-        - "Strictly Necessary": Essential for website function (e..g, session, security, shopping cart).
+        - "Strictly Necessary": Essential for website function (e.g., session, security, shopping cart).
         - "Functional": Remembers user choices (e.g., language, preferences).
         - "Analytical": Collects data on user behavior (e.g., Google Analytics).
         - "Marketing": Tracks users for advertising.
         - "Uncategorized": Unknown or generic purpose.
 
         INSTRUCTIONS:
-        1.  Analyze each cookie in the "Input Cookies" list.
-        2.  Based on the cookie's "name" and "domain", categorize it into one of the five categories defined above.
-        3.  Create a "description" for each cookie based on your general knowledge (e.g., a cookie named "_ga" is for Google Analytics).
-        4.  CRITICAL RULE: If a cookie's name is generic or unknown (e.g., "uid", "session_token"), you MUST set its description to "No specific description available." Do NOT invent a purpose.
-        5.  Return a single JSON object with the root key "cookie_categories".
-        6.  The value of "cookie_categories" must be a list of objects (one for each category that contains cookies).
-        7.  Each category object must contain:
+        - Analyze each cookie in the "Input Cookies" list.
+        - Based on the cookie's "name" and "domain", categorize it into one of the five categories defined above.
+        - Create a "description" for each cookie based on your general knowledge (e.g., a cookie named "_ga" is for Google Analytics).
+        - CRITICAL RULE: If a cookie's name is generic or unknown (e.g., "uid", "session_token"), you MUST set its description to "No specific description available." Do NOT invent a purpose.
+        - Return a single JSON object with the root key "cookie_categories".
+        - The value of "cookie_categories" must be a list of objects (one for each category that contains cookies).
+        - Each category object must contain:
             - "category_name": The name of the category.
             - "cookies": A list of objects for the cookies in that category.
-        8.  Each cookie object in the *output* "cookies" list MUST have this structure:
+        - Each cookie object in the *output* "cookies" list MUST have this structure:
             - "name": The original cookie name.
             - "domain": The original cookie domain.
             - "description": Your generated description (or "No specific description available.").
@@ -1089,18 +1095,31 @@ class PrivacyAnalyzer:
         
         response = await self.llm_client.query_json(user_prompt=prompt)
         
-        if not response.success:
-            logger.error(f"Cookie categorization failed: {response.error}")
-            return {}
+        if not response.success or "cookie_categories" not in response.data:
+            logger.error(f"Cookie categorization failed or returned malformed data: {response.error}")
+            return []
             
-        return response.data
+        # Parse the dictionary into dataclass objects
+        categorized_list = []
+        for cat_data in response.data.get("cookie_categories", []):
+            try:
+                cookies_in_cat = [CategorizedCookie(**c) for c in cat_data.get("cookies", [])]
+                categorized_list.append(
+                    CookieCategory(
+                        category_name=cat_data.get("category_name"),
+                        cookies=cookies_in_cat
+                    )
+                )
+            except (TypeError, KeyError) as e:
+                logger.warning(f"Skipping malformed cookie category object: {cat_data}. Error: {e}")
+        
+        return categorized_list
 
 
 
-    ############################################################################### UTILITY FUNCTIONS ###############################################################################
+    # --- Utility Functions ---
 
-    # --- Generic Utility Methods ---
-    def _filter_promising_links(self, all_links: List[Dict[str, str]], filter_keywords: List[str]) -> List[Dict[str, str]]:
+    def _filter_promising_links(self, all_links: List[ExtractedLink], filter_keywords: List[str]) -> List[ExtractedLink]:
         """
         Filters a list of link objects based on a list of keywords.
         """
@@ -1111,13 +1130,13 @@ class PrivacyAnalyzer:
         lower_keywords = [k.lower() for k in filter_keywords]
 
         for link in all_links:
-            search_area = link["href"].lower() + " " + link["text"].lower()
+            search_area = link.href.lower() + " " + link.text.lower()
             if any(keyword in search_area for keyword in lower_keywords):
                 promising_links.append(link)
         
         return promising_links
 
-    async def _extract_all_internal_links(self, page) -> List[Dict[str, str]]:
+    async def _extract_all_internal_links(self, page) -> List[ExtractedLink]:
         """
         Helper to extract all internal links (including subdomains) from a page,
         returning both the URL and the anchor text.
@@ -1146,7 +1165,7 @@ class PrivacyAnalyzer:
                     
                     if (is_exact_domain or is_subdomain) and '#' not in full_url and not full_url.endswith(('.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.xml', '.json', '.zip', '.rar', '.tar', '.gz', '.svg', '.ico')):
                         text_content = (await a.inner_text() or "").strip()
-                        links.append({"href": full_url, "text": text_content})
+                        links.append(ExtractedLink(href=full_url, text=text_content))
                         unique_hrefs.add(full_url)
             except Exception as e:
                 logger.debug(f"Could not process link {href}: {e}")
@@ -1154,7 +1173,7 @@ class PrivacyAnalyzer:
         logger.debug(f"Found {len(links)} total internal links on {page.url}")
         return links
     
-    def _get_best_candidate(self, promising_links: List[Dict[str, str]], keyword_priority_list: List[str]) -> Optional[str]:
+    def _get_best_candidate(self, promising_links: List[ExtractedLink], keyword_priority_list: List[str]) -> Optional[str]:
         """
         Selects the best URL from a list of candidates using a weighted scoring system
         based on a prioritized list of keywords.
@@ -1177,21 +1196,21 @@ class PrivacyAnalyzer:
                 required_words = keyword.lower().split()
 
                 # Give a higher score for matches in the anchor text (strong signal)
-                if all(word in link_data["text"].lower() for word in required_words):
+                if all(word in link_data.text.lower() for word in required_words):
                     current_score += weight * 2
                 
                 # Give a lower score for matches in the URL itself
-                if all(word in link_data["href"].lower() for word in required_words):
+                if all(word in link_data.href.lower() for word in required_words):
                     current_score += weight
 
             # Update the best link if the current one has a better score
             if current_score > max_score:
                 max_score = current_score
-                best_link_href = link_data["href"]
+                best_link_href = link_data.href
             # Tie-breaker: if scores are equal, prefer the shorter link
             elif current_score == max_score and best_link_href:
-                if len(link_data["href"]) < len(best_link_href):
-                    best_link_href = link_data["href"]
+                if len(link_data.href) < len(best_link_href):
+                    best_link_href = link_data.href
         
         if best_link_href:
             logger.info(f"Heuristic selection: chose '{best_link_href}' with score {max_score}")
