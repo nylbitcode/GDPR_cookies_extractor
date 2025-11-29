@@ -14,6 +14,7 @@ from .models import (
     CookieCategory,
     CategorizedCookie,
 )
+from dataclasses import asdict
 logger = logging.getLogger(__name__)
 
 class PrivacyAnalyzer:
@@ -25,7 +26,7 @@ class PrivacyAnalyzer:
         self.llm_client = llm_client
         logger.info(f"PrivacyAnalyzer initialized with client: {type(llm_client).__name__}")
 
-    async def _dump_snapshot(self, page, site_dump_folder: str, phase: str, all_links: List[Dict]):
+    async def _dump_snapshot(self, page, site_dump_folder: str, phase: str, all_links: List[ExtractedLink]):
         """Dumps the HTML and all extracted links for a specific analysis phase."""
         try:
             # Ensure the site-specific dump directory exists
@@ -40,7 +41,7 @@ class PrivacyAnalyzer:
             # Dump all links
             links_dump_path = os.path.join(site_dump_folder, f"{phase}_links.json")
             with open(links_dump_path, "w", encoding="utf-8") as f:
-                json.dump(all_links, f, indent=4, ensure_ascii=False)
+                json.dump([asdict(link) for link in all_links], f, indent=4, ensure_ascii=False)
             
             logger.info(f"Dumped snapshot for phase '{phase}' to {site_dump_folder}")
 
@@ -118,7 +119,7 @@ class PrivacyAnalyzer:
                 "main_link": url,
                 "phase": phase_name,
                 "all_extracted_links": all_links_objects,
-                "promising_extracted_links": [link['href'] for link in promising_links_objects]
+                "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
             # Check for external redirect after navigation
@@ -131,7 +132,7 @@ class PrivacyAnalyzer:
             html_lower = html.lower()
 
             # Call LLM with a simple list of hrefs for the prompt
-            href_list_for_llm = [link['href'] for link in promising_links_objects]
+            href_list_for_llm = [link.href for link in promising_links_objects]
             policy_output = await self._extract_policy_url_from_html(html, url, href_list_for_llm)
             llm_url = policy_output.get("privacy_policy_url")
             logger.debug(f"Returned choice from LLM: {llm_url}")
@@ -139,7 +140,7 @@ class PrivacyAnalyzer:
             # Validate the LLM's choice and apply heuristic override if needed
             if promising_links_objects and llm_url:
                 # Check if the LLM's choice is valid (i.e., it's one of the promising hrefs)
-                is_llm_choice_valid = any(llm_url in link_obj['href'] for link_obj in promising_links_objects)
+                is_llm_choice_valid = any(llm_url in link_obj.href for link_obj in promising_links_objects)
                 
                 if not is_llm_choice_valid:
                     logger.warning(f"LLM disobeyed prompt. Its choice '{llm_url}' was not in the candidate list. Applying heuristic fallback.")
@@ -344,7 +345,7 @@ class PrivacyAnalyzer:
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
                 "all_extracted_links": all_links_objects,
-                "promising_extracted_links": [link['href'] for link in promising_links_objects]
+                "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
             page_content = await page.evaluate("document.body.innerText")
@@ -370,12 +371,12 @@ class PrivacyAnalyzer:
                 return {"cookie_declaration_url": None, "reasoning": "Declaration not on page, and no links with relevant keywords found."}, link_extraction_phases
 
             html_content = await page.content()
-            href_list_for_llm = [link['href'] for link in promising_links_objects]
+            href_list_for_llm = [link.href for link in promising_links_objects]
             llm_link_choice_result = await self._extract_cookie_link_from_html(html_content, privacy_policy_url, href_list_for_llm)
             llm_chosen_link = llm_link_choice_result.get("cookie_policy_link")
             
             final_candidate_url = None
-            is_llm_choice_valid = any(llm_chosen_link in link_obj['href'] for link_obj in promising_links_objects) if llm_chosen_link else False
+            is_llm_choice_valid = any(llm_chosen_link in link_obj.href for link_obj in promising_links_objects) if llm_chosen_link else False
 
             if llm_chosen_link and is_llm_choice_valid:
                 final_candidate_url = llm_chosen_link
@@ -544,7 +545,7 @@ class PrivacyAnalyzer:
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
                 "all_extracted_links": all_links_objects,
-                "promising_extracted_links": [link['href'] for link in promising_links_objects]
+                "promising_extracted_links": [link.href for link in promising_links_objects]
             })
             
             page_content = await page.evaluate("document.body.innerText")
@@ -571,12 +572,12 @@ class PrivacyAnalyzer:
                 return {"data_retention_url": None, "reasoning": "Policy not on page, and no links with relevant keywords found."}, link_extraction_phases
 
             html_content = await page.content()
-            href_list_for_llm = [link['href'] for link in promising_links_objects]
+            href_list_for_llm = [link.href for link in promising_links_objects]
             llm_link_choice_result = await self._extract_data_retention_link_from_html(html_content, privacy_policy_url, href_list_for_llm)
             llm_chosen_link = llm_link_choice_result.get("data_retention_policy_link")
 
             final_candidate_url = None
-            is_llm_choice_valid = any(llm_chosen_link in link_obj['href'] for link_obj in promising_links_objects) if llm_chosen_link else False
+            is_llm_choice_valid = any(llm_chosen_link in link_obj.href for link_obj in promising_links_objects) if llm_chosen_link else False
 
             if llm_chosen_link and is_llm_choice_valid:
                 final_candidate_url = llm_chosen_link
@@ -740,8 +741,8 @@ class PrivacyAnalyzer:
             link_extraction_phases.append({
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
-                "all_extracted_links": [link['href'] for link in all_links_objects],
-                "promising_extracted_links": [link['href'] for link in promising_links_objects]
+                "all_extracted_links": [link.href for link in all_links_objects],
+                "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
             page_content = await page.evaluate("document.body.innerText")
@@ -768,12 +769,12 @@ class PrivacyAnalyzer:
                 return {"data_deletion_url": None, "reasoning": "Policy not on page, and no links with relevant keywords found."}, link_extraction_phases
 
             html_content = await page.content()
-            href_list_for_llm = [link['href'] for link in promising_links_objects]
+            href_list_for_llm = [link.href for link in promising_links_objects]
             llm_link_choice_result = await self._extract_data_deletion_link_from_html(html_content, privacy_policy_url, href_list_for_llm)
             llm_chosen_link = llm_link_choice_result.get("data_deletion_policy_link")
 
             final_candidate_url = None
-            is_llm_choice_valid = any(llm_chosen_link in link_obj['href'] for link_obj in promising_links_objects) if llm_chosen_link else False
+            is_llm_choice_valid = any(llm_chosen_link in link_obj.href for link_obj in promising_links_objects) if llm_chosen_link else False
 
             if llm_chosen_link and is_llm_choice_valid:
                 final_candidate_url = llm_chosen_link
@@ -940,8 +941,8 @@ class PrivacyAnalyzer:
             link_extraction_phases.append({
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
-                "all_extracted_links": [link['href'] for link in all_links_objects],
-                "promising_extracted_links": [link['href'] for link in promising_links_objects]
+                "all_extracted_links": [link.href for link in all_links_objects],
+                "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
             page_content = await page.evaluate("document.body.innerText")
@@ -968,12 +969,12 @@ class PrivacyAnalyzer:
                 return {"dpo_url": None, "reasoning": "DPO info not on page, and no links with relevant keywords found."}, link_extraction_phases
 
             html_content = await page.content()
-            href_list_for_llm = [link['href'] for link in promising_links_objects]
+            href_list_for_llm = [link.href for link in promising_links_objects]
             llm_link_choice_result = await self._extract_dpo_link_from_html(html_content, privacy_policy_url, href_list_for_llm)
             llm_chosen_link = llm_link_choice_result.get("dpo_policy_link")
 
             final_candidate_url = None
-            is_llm_choice_valid = any(llm_chosen_link in link_obj['href'] for link_obj in promising_links_objects) if llm_chosen_link else False
+            is_llm_choice_valid = any(llm_chosen_link in link_obj.href for link_obj in promising_links_objects) if llm_chosen_link else False
 
             if llm_chosen_link and is_llm_choice_valid:
                 final_candidate_url = llm_chosen_link
