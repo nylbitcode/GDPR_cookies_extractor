@@ -91,7 +91,7 @@ class SiteAnalysisResult:
         site_url: str,
         scenario: str,
         cookies: List[PlaywrightCookie],
-        cookie_categories: Dict[str, List[Dict[str, Any]]],
+        cookie_categories: List[CookieCategory],
         third_party_count: int,
         llm_output: dict,
         privacy_policy_url: Optional[str] = None,
@@ -102,15 +102,6 @@ class SiteAnalysisResult:
         dpo: Optional[Dict[str, Any]] = None
     ) -> "SiteAnalysisResult":
         
-        # Build categorized cookies
-        cats = cookie_categories.get("cookie_categories", [])
-        categorized_cookies_list = [
-            CookieCategory(
-                category_name=cat.get("category_name"),
-                cookies=[CategorizedCookie(**c) for c in cat.get("cookies", [])]
-            ) for cat in cats
-        ]
-
         # Build analyses container
         analyses_container = Analyses(
             cookie_declaration=CookieDeclarationAnalysis(**cookie_declaration) if cookie_declaration else None,
@@ -127,7 +118,7 @@ class SiteAnalysisResult:
             cookies_count=len(cookies),
             third_party_cookies_count=third_party_count,
             raw_cookies_data=cookies,
-            categorized_cookies=categorized_cookies_list,
+            categorized_cookies=cookie_categories,
             simple_extractor_links=simple_extractor_links if simple_extractor_links is not None else {},
             analyses=analyses_container
         )
