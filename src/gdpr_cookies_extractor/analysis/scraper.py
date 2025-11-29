@@ -56,7 +56,7 @@ async def handle_cookie_banner(page, action="accept", click: bool = True):
                 if click:
                     logger.info(f"Clicking '{action}' button with selector: {selector}")
                     await button.click()
-                    await page.wait_for_timeout(2000)  # Give the page time to process the click
+                    await page.wait_for_load_state('networkidle')
                 else:
                     logger.info(f"Found '{action}' button with selector: {selector} (no click)")
                 return True

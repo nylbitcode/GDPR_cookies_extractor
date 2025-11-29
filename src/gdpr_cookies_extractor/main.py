@@ -50,7 +50,7 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
         if scenario != "initial":
             await handle_cookie_banner(page, action=scenario, click=True)
         
-        await page.wait_for_timeout(3000)
+        await page.wait_for_load_state('networkidle')
 
         # Get the final URL after potential redirects
         current_url = page.url
@@ -122,6 +122,10 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
             await context.close()
 
 
+async def worker(semaphore, context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config):
+    async with semaphore:
+        return await process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
+
 async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], browser_context_config: Dict[str, Any], performance_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
     """
     Orchestrates site analysis with a new, more efficient logic:
@@ -129,11 +133,6 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
     - Run an initial "no-click" analysis.
     - Conditionally run analyses for each available option ("accept", "reject", etc.).
     """
-    
-    async def worker(semaphore, context, site_url, scenario, site_dump_folder, search_keywords_config):
-        async with semaphore:
-            return await process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
-
     tasks = []
     base_dump_dir = f"output/dumps/analysis_results_{timestamp}"
     
