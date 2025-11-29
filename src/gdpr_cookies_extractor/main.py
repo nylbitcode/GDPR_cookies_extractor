@@ -122,15 +122,23 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
             await context.close()
 
 
-async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], browser_context_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
+async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], browser_context_config: Dict[str, Any], performance_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
     """
     Orchestrates site analysis with a new, more efficient logic:
     - For each site, first detect which cookie banner options are available.
     - Run an initial "no-click" analysis.
     - Conditionally run analyses for each available option ("accept", "reject", etc.).
     """
+    
+    async def worker(semaphore, context, site_url, scenario, site_dump_folder, search_keywords_config):
+        async with semaphore:
+            return await process_site_scenario(context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
+
     tasks = []
     base_dump_dir = f"output/dumps/analysis_results_{timestamp}"
+    
+    concurrency_limit = performance_config.get('concurrency_limit', 5)
+    semaphore = asyncio.Semaphore(concurrency_limit)
 
     for index, row in sites_df.iterrows():
         site_url = row['website_url']
@@ -168,7 +176,7 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
             # Create a new, isolated context for each actual analysis run
             analysis_context = await browser.new_context(**browser_context_config)
             tasks.append(
-                process_site_scenario(analysis_context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
+                worker(semaphore, analysis_context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
             )
     
     results = await asyncio.gather(*tasks)
@@ -235,6 +243,19 @@ def load_user_defined_keywords():
         return {}
 
 
+def load_performance_config():
+    """
+    Loads performance configuration from config.json.
+    """
+    try:
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+        return config.get('performance', {})
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        logger.warning(f"Could not load performance_config from config.json: {e}. Using empty dict.")
+        return {}
+
+
 async def gdpr_analysis(sites_df):
     """
     Orchestrates the setup, execution, and saving of the analysis.
@@ -242,6 +263,7 @@ async def gdpr_analysis(sites_df):
     llm_config = load_llm_config()
     search_keywords_config = load_user_defined_keywords()
     browser_context_config = load_browser_context_config()
+    performance_config = load_performance_config()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     llm_provider = OllamaProvider(model=llm_config.get('model', 'llama3'))
@@ -253,7 +275,7 @@ async def gdpr_analysis(sites_df):
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         
-        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config, browser_context_config)
+        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config, browser_context_config, performance_config)
         
         await browser.close()
     
