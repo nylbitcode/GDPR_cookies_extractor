@@ -21,11 +21,9 @@ class PrivacyAnalyzer:
     Analyzes privacy policies and cookie data using a provided LLM client.
     """
     
-    def __init__(self, llm_client: AbstractLLMClient, timestamp: str, max_hops: int = 3):
+    def __init__(self, llm_client: AbstractLLMClient):
         self.llm_client = llm_client
-        self.max_hops = max_hops
-        self.timestamp = timestamp
-        logger.info(f"PrivacyAnalyzer initialized with client: {type(llm_client).__name__} and max_hops: {max_hops}")
+        logger.info(f"PrivacyAnalyzer initialized with client: {type(llm_client).__name__}")
 
     async def _dump_snapshot(self, page, site_dump_folder: str, phase: str, all_links: List[Dict]):
         """Dumps the HTML and all extracted links for a specific analysis phase."""

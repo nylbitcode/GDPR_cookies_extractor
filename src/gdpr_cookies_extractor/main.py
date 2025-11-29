@@ -122,7 +122,7 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
             await context.close()
 
 
-async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]]) -> List[SiteAnalysisResult]:
+async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], browser_context_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
     """
     Orchestrates site analysis with a new, more efficient logic:
     - For each site, first detect which cookie banner options are available.
@@ -145,7 +145,7 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
         
         detection_context = None
         try:
-            detection_context = await browser.new_context(locale='it-IT', timezone_id='Europe/Rome')
+            detection_context = await browser.new_context(**browser_context_config)
             page = await detection_context.new_page()
             await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
             
@@ -166,13 +166,7 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
         # --- Execution Phase ---
         for scenario in scenarios_to_run:
             # Create a new, isolated context for each actual analysis run
-            analysis_context = await browser.new_context(
-                locale='it-IT',
-                timezone_id='Europe/Rome',
-                geolocation={"longitude": 12.4964, "latitude": 41.9028},
-                permissions=['geolocation'],
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"
-            )
+            analysis_context = await browser.new_context(**browser_context_config)
             tasks.append(
                 process_site_scenario(analysis_context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
             )
@@ -215,17 +209,17 @@ def load_llm_config():
         return {"model": "llama3"}
 
 
-def load_scraper_config():
+def load_browser_context_config():
     """
-    Loads scraper configuration from config.json.
+    Loads browser context options from config.json.
     """
     try:
         with open('config.json', 'r') as f:
             config = json.load(f)
-        return config['scraper']
+        return config.get('browser_context_options', {})
     except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        logger.warning(f"Could not load scraper config from config.json: {e}. Using default.")
-        return {"max_hops": 3}
+        logger.warning(f"Could not load browser_context_options from config.json: {e}. Using empty dict.")
+        return {}
 
 
 def load_user_defined_keywords():
@@ -246,22 +240,20 @@ async def gdpr_analysis(sites_df):
     Orchestrates the setup, execution, and saving of the analysis.
     """
     llm_config = load_llm_config()
-    scraper_config = load_scraper_config()
     search_keywords_config = load_user_defined_keywords()
+    browser_context_config = load_browser_context_config()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     llm_provider = OllamaProvider(model=llm_config.get('model', 'llama3'))
     analyzer = PrivacyAnalyzer(
-        llm_client=llm_provider,
-        timestamp=timestamp,
-        max_hops=scraper_config.get('max_hops', 3)
+        llm_client=llm_provider
     )
     
     
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         
-        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config)
+        all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config, browser_context_config)
         
         await browser.close()
     
