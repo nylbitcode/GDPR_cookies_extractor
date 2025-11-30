@@ -50,7 +50,7 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
         if scenario != "initial":
             await handle_cookie_banner(page, action=scenario, click=True)
         
-        await page.wait_for_load_state('networkidle')
+        await page.wait_for_timeout(3000)
 
         # Get the final URL after potential redirects
         current_url = page.url
