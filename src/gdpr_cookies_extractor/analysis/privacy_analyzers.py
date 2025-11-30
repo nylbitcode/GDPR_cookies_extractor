@@ -107,6 +107,7 @@ class PrivacyAnalyzer:
             logger.info(f"Analyzing page (Hop {hop_num}): {url}")
             if not page.url == url:
                 await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            await page.wait_for_timeout(3000)  # Wait for dynamic content to load
 
             # Get all internal links and dump snapshot
             all_links_objects = await self._extract_all_internal_links(page)
@@ -741,7 +742,7 @@ class PrivacyAnalyzer:
             link_extraction_phases.append({
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
-                "all_extracted_links": [link.href for link in all_links_objects],
+                "all_extracted_links": all_links_objects,
                 "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
@@ -941,7 +942,7 @@ class PrivacyAnalyzer:
             link_extraction_phases.append({
                 "main_link": privacy_policy_url,
                 "phase": phase_name,
-                "all_extracted_links": [link.href for link in all_links_objects],
+                "all_extracted_links": all_links_objects,
                 "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
@@ -1169,7 +1170,9 @@ class PrivacyAnalyzer:
             except Exception as e:
                 logger.debug(f"Could not process link {href}: {e}")
 
-        logger.debug(f"Found {len(links)} total internal links on {page.url}")
+        logger.info(f"Found {len(links)} total internal links on {page.url}")
+        for link in links:
+            logger.debug(f"  - Found internal link: {link.href} (Text: '{link.text}')")
         return links
     
     def _get_best_candidate(self, promising_links: List[ExtractedLink], keyword_priority_list: List[str]) -> Optional[str]:
