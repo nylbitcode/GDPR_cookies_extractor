@@ -117,7 +117,6 @@ async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: st
         logger.error(f"FATAL Error processing {site_url} ('{scenario}'): {e}", exc_info=True)
         return SiteAnalysisResult.from_exception(site_url, scenario, e)
     finally:
-        clear_log_context()
         if context:
             await context.close()
 

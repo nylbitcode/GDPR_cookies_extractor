@@ -3,33 +3,29 @@ import sys
 import os
 from datetime import datetime
 import json
+from contextvars import ContextVar
+
+# Use ContextVar for context-local storage, safe for concurrent code.
+site_context = ContextVar('site', default='general')
+scenario_context = ContextVar('scenario', default='')
+
 
 class ContextFilter(logging.Filter):
     """
     A logging filter that injects contextual information (site, scenario) into log records.
+    It uses contextvars to be safe in concurrent environments like asyncio.
     """
-    def __init__(self):
-        super().__init__()
-        self.site = 'general'
-        self.scenario = ''
-
     def filter(self, record):
-        record.site = self.site
-        record.scenario = self.scenario
+        record.site = site_context.get()
+        record.scenario = scenario_context.get()
         return True
 
-# Module-level instance of the filter
-context_filter = ContextFilter()
 
 def set_log_context(site: str, scenario: str):
-    """Sets the global logging context."""
-    context_filter.site = site
-    context_filter.scenario = scenario
+    """Sets the logging context for the current execution context (e.g., the current asyncio Task)."""
+    site_context.set(site)
+    scenario_context.set(scenario)
 
-def clear_log_context():
-    """Clears the global logging context."""
-    context_filter.site = 'general'
-    context_filter.scenario = ''
 
 def setup_logging():
     """
@@ -61,6 +57,9 @@ def setup_logging():
     # Remove any existing handlers
     if root_logger.hasHandlers():
         root_logger.handlers.clear()
+
+    # Create a new instance of the filter for the handlers
+    context_filter = ContextFilter()
 
     # Create formatter
     formatter = logging.Formatter(log_format)
