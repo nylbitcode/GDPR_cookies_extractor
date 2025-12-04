@@ -32,7 +32,7 @@ def load_selectors_from_config():
 async def handle_cookie_banner(page, action="accept", click: bool = True):
     """
     Finds and optionally clicks the cookie banner button based on the desired action.
-    If 'click' is False, it only checks for the button's visibility.
+    Handles multiple matches by finding the first VISIBLE one to avoid Strict Mode errors.
     """
     selectors_config = load_selectors_from_config()
     accept_selectors = selectors_config.get("accept_selectors", [])
@@ -50,17 +50,31 @@ async def handle_cookie_banner(page, action="accept", click: bool = True):
 
     for selector in target_selectors:
         try:
-            button = page.locator(selector)
+            # Crea il locator ma NON eseguire ancora azioni che richiedono unicità
+            locators = page.locator(selector)
             
-            if await button.is_visible(timeout=5000):
-                if click:
-                    logger.info(f"Clicking '{action}' button with selector: {selector}")
-                    await button.click()
-                    await page.wait_for_timeout(2000)
-                else:
-                    logger.info(f"Found '{action}' button with selector: {selector} (no click)")
-                return True
-        except Exception:
+            # Conta quanti elementi corrispondono al selettore (es. 3 bottoni "Accept")
+            count = await locators.count()
+            
+            # Li controlliamo uno per uno
+            for i in range(count):
+                element = locators.nth(i) # Prendi il riferimento all'i-esimo elemento
+                
+                # Controlla se QUESTO specifico elemento è visibile
+                # Usiamo un timeout breve perché stiamo ciclando su vari candidati
+                if await element.is_visible(timeout=2000):
+                    if click:
+                        logger.info(f"Clicking '{action}' button (match {i+1}/{count}) with selector: {selector}")
+                        # Forza il click se necessario, o usa il click standard
+                        await element.click()
+                        await page.wait_for_timeout(2000)
+                    else:
+                        logger.info(f"Found '{action}' button (match {i+1}/{count}) with selector: {selector} (no click)")
+                    
+                    return True # Trovato e gestito, usciamo con successo
+                    
+        except Exception as e:
+            # logger.debug(f"Selector failed: {selector} - {e}")
             continue
     
     logger.info(f"No '{action}' button found for this site.")
