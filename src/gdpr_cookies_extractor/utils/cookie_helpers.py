@@ -24,7 +24,7 @@ def count_third_party_cookies(site_url: str, cookies: List[Dict[str, Any]]) -> i
     logger.debug("Parsing base domain for third-party cookie count...")
     try:
         base_domain = urlparse(site_url).netloc.replace('www.', '')
-        # Prepare domain for comparison by removing dots, to handle subdomains like '.google.com'
+        
         comparable_base_domain = base_domain.replace('.', '')
 
         logger.debug("Counting third-party cookies...")
@@ -40,4 +40,4 @@ def count_third_party_cookies(site_url: str, cookies: List[Dict[str, Any]]) -> i
         return third_party_count
     except Exception as e:
         logger.error(f"Could not count third-party cookies for {site_url}: {e}")
-        return 0 # Return 0 if an error occurs
+        return 0 

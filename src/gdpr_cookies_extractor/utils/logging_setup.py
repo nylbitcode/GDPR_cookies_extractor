@@ -39,14 +39,14 @@ def setup_logging():
 
     log_format = '%(asctime)s - %(levelname)s - [%(site)s - %(scenario)s] - %(message)s'
 
-    # Load log level from config.json or default to INFO
+    # Load log level from config.json or default to DEBUG
     log_level_str = "DEBUG"
     try:
         with open('config.json', 'r') as f:
             config = json.load(f)
         log_level_str = config.get('logging', {}).get('level', 'DEBUG').upper()
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
-        pass # Use default INFO
+        pass
 
     log_level = getattr(logging, log_level_str, logging.INFO)
 

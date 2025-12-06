@@ -198,7 +198,18 @@ async def gdpr_analysis(sites_df):
     
     
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                '--disable-blink-features=AutomationControlled',
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-infobars',
+                '--window-position=0,0',
+                '--ignore-certificate-errors',
+                '--ignore-certificate-errors-spki-list',
+            ]
+        )
         
         all_results = await run_all_analyses(sites_df, analyzer, browser, timestamp, search_keywords_config, browser_context_config, performance_config)
         
