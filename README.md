@@ -93,7 +93,7 @@ docker run -it --rm \
  gdpr_extractor
 ```
 
-_(Add `--gpus all` after `docker run` if you have a compatible NVIDIA GPU and want to accelerate Ollama.)_
+_(Add `--gpus all` after `docker run` if you have a compatible GPU and want to accelerate LLM work.)_
 
 **To analyze a single site:**
 

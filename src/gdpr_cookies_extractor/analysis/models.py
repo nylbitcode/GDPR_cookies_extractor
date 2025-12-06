@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, TypedDict
 
-# --- Data Models for Type Hinting ---
-
 class PlaywrightCookie(TypedDict):
     name: str
     value: str
@@ -29,7 +27,7 @@ class ExtractedLink:
     href: str
     text: str
 
-# --- Sub-Analysis Result Models ---
+# --- Sub-Analysis Result Models
 
 @dataclass
 class BaseAnalysis:
@@ -62,7 +60,7 @@ class Analyses:
     dpo: Optional[DPOAnalysis] = None
 
 
-# --- Main Result Model ---
+# --- Main Result Model 
 
 @dataclass
 class SiteAnalysisResult:
@@ -102,7 +100,7 @@ class SiteAnalysisResult:
         dpo: Optional[Dict[str, Any]] = None
     ) -> "SiteAnalysisResult":
         
-        # Build analyses container
+        
         analyses_container = Analyses(
             cookie_declaration=CookieDeclarationAnalysis(**cookie_declaration) if cookie_declaration else None,
             data_retention=DataRetentionAnalysis(**data_retention) if data_retention else None,
@@ -133,5 +131,5 @@ class SiteAnalysisResult:
             website_url=site_url,
             scenario=scenario,
             llm_reasoning=f"Failed to process: {e}",
-            analyses=Analyses() # Ensure analyses is always an Analyses object
+            analyses=Analyses() 
         )
