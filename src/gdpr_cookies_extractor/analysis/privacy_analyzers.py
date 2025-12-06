@@ -5,15 +5,7 @@ import os
 from urllib.parse import urljoin, urlparse
 from typing import Dict, Any, List, Optional, Tuple
 from .llm_interface import AbstractLLMClient
-from .models import (
-    ExtractedLink,
-    CookieDeclarationAnalysis,
-    DataRetentionAnalysis,
-    DataDeletionAnalysis,
-    DPOAnalysis,
-    CookieCategory,
-    CategorizedCookie,
-)
+from .models import ExtractedLink, CookieCategory, CategorizedCookie
 from dataclasses import asdict
 logger = logging.getLogger(__name__)
 
