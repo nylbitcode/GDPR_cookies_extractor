@@ -11,9 +11,18 @@ from urllib.parse import urlparse, urljoin
 from typing import List, Dict, Any, Optional
 from dataclasses import asdict
 
-# Relative imports (assuming project structure)
+# Relative imports
 from .utils.logging_setup import *
 from .utils.cookie_helpers import simplify_cookies, count_third_party_cookies
+from .utils.utils import (
+    sanitize_filename,
+    save_results,
+    create_output_directories,
+    load_llm_config,
+    load_browser_context_config,
+    load_user_defined_keywords,
+    load_performance_config
+)
 from .analysis.scraper import handle_cookie_banner
 from .analysis.ollama_providers import OllamaProvider
 from .analysis.privacy_analyzers import PrivacyAnalyzer
@@ -21,14 +30,6 @@ from .analysis.llm_interface import AbstractLLMClient
 from .analysis.models import SiteAnalysisResult
 
 logger = logging.getLogger(__name__)
-
-
-def sanitize_filename(url: str) -> str:
-    """Sanitizes a URL to be used as a valid filename."""
-    parsed_url = urlparse(url)
-    
-    sanitized = re.sub(r'[\/*?:"<>|]', "_", parsed_url.netloc)
-    return sanitized
 
 
 async def process_site_scenario(context, analyzer: PrivacyAnalyzer, site_url: str, scenario: str, site_dump_folder: str, search_keywords_config: Dict[str, List[str]]) -> SiteAnalysisResult:
@@ -128,7 +129,7 @@ async def worker(semaphore, context, analyzer, site_url, scenario, site_dump_fol
 async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, browser, timestamp: str, search_keywords_config: Dict[str, List[str]], browser_context_config: Dict[str, Any], performance_config: Dict[str, Any]) -> List[SiteAnalysisResult]:
     """
     Orchestrates site analysis with a new, more efficient logic:
-    - For each site, first detect which cookie banner options are available.
+    - For each site detect which cookie banner options are available.
     - Run an initial "no-click" analysis.
     - Conditionally run analyses for each available option ("accept", "reject", etc.).
     """
@@ -145,9 +146,9 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
 
         site_dump_folder = os.path.join(base_dump_dir, sanitize_filename(site_url))
         
-        # --- Detection Phase ---
+        # Detection Phase 
         logger.info(f"Detecting available cookie scenarios for {site_url}...")
-        scenarios_to_run = ["initial"] # Always run the initial "no-click" scan
+        scenarios_to_run = ["initial"]
         
         detection_context = None
         try:
@@ -155,9 +156,8 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
             page = await detection_context.new_page()
             await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
             
-            possible_scenarios = ["accept", "reject", "only_essential"]
+            possible_scenarios = ["accept", "only_essential"]
             for scenario_option in possible_scenarios:
-                # Use click=False to only detect the button
                 if await handle_cookie_banner(page, action=scenario_option, click=False):
                     scenarios_to_run.append(scenario_option)
             
@@ -169,9 +169,9 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
             if detection_context:
                 await detection_context.close()
 
-        # --- Execution Phase ---
+        # Execution Phase
         for scenario in scenarios_to_run:
-            # Create a new, isolated context for each actual analysis run
+            # Create a new isolated context for each actual analysis run
             analysis_context = await browser.new_context(**browser_context_config)
             tasks.append(
                 worker(semaphore, analysis_context, analyzer, site_url, scenario, site_dump_folder, search_keywords_config)
@@ -179,79 +179,6 @@ async def run_all_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnalyzer, br
     
     results = await asyncio.gather(*tasks)
     return results
-
-
-def save_results(results: List[SiteAnalysisResult], timestamp: str):
-    """
-    Saves the list of result dataclasses to a timestamped JSON file.
-    """
-    results_dicts = [asdict(result) for result in results]
-    logger.debug(f"Data to be serialized: {results_dicts}") 
-    filename = f"output/analysis_results_{timestamp}.json"
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(results_dicts, f, indent=4, ensure_ascii=False)
-    logger.info(f"Analysis complete. Results saved to {filename}")
-
-
-def create_output_directories():
-    """
-    Creates the necessary output directories if they don't already exist.
-    """
-    os.makedirs("output", exist_ok=True)
-    os.makedirs("output/dumps", exist_ok=True)
-    logger.info("Ensured output directories exist.")
-
-
-def load_llm_config():
-    """
-    Loads LLM configuration from config.json.
-    """
-    try:
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        return config['llm']
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        logger.warning(f"Could not load LLM config from config.json: {e}. Using default.")
-        return {"model": "llama3"}
-
-
-def load_browser_context_config():
-    """
-    Loads browser context options from config.json.
-    """
-    try:
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        return config.get('browser_context_options', {})
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        logger.warning(f"Could not load browser_context_options from config.json: {e}. Using empty dict.")
-        return {}
-
-
-def load_user_defined_keywords():
-    """
-    Loads user-defined keywords from config.json.
-    """
-    try:
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        return config.get('search_keywords', {})
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        logger.warning(f"Could not load user_defined_keywords from config.json: {e}. Using empty dict.")
-        return {}
-
-
-def load_performance_config():
-    """
-    Loads performance configuration from config.json.
-    """
-    try:
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        return config.get('performance', {})
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        logger.warning(f"Could not load performance_config from config.json: {e}. Using empty dict.")
-        return {}
 
 
 async def gdpr_analysis(sites_df):
@@ -284,7 +211,7 @@ def main():
     setup_logging()
     create_output_directories()
     
-    logger.info("Starting GDPR Cookie Analysis...")
+    logger.info("Starting GDPR Analysis...")
 
     if len(sys.argv) > 1:
         site_url_from_cli = sys.argv[1]
