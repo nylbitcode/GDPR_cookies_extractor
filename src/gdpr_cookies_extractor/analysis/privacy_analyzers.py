@@ -119,7 +119,6 @@ class PrivacyAnalyzer:
             link_extraction_phases.append({
                 "main_link": url,
                 "phase": phase_name,
-                "all_extracted_links": all_links_objects,
                 "promising_extracted_links": [link.href for link in promising_links_objects]
             })
 
