@@ -19,8 +19,12 @@ def sanitize_filename(website_url: str) -> str:
     if not website_url.startswith(('http://', 'https://')):
         website_url = 'https://' + website_url
     parsed_url = urlparse(website_url)
-    # Replace dots with underscores in the netloc for safety
-    sanitized = parsed_url.netloc.replace(".", "_")
+    netloc = parsed_url.netloc
+    # Remove 'www.' prefix to treat www.example.com and example.com as the same site
+    if netloc.startswith("www."):
+        netloc = netloc[4:]
+    # Replace remaining dots with underscores for safety
+    sanitized = netloc.replace(".", "_")
     return sanitized
 
 def get_site_output_dir(website_url: str) -> str:
