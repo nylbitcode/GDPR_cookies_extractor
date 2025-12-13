@@ -140,7 +140,7 @@ async def run_sequential_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnaly
         scenarios_to_run = ["initial"]
         
         try:
-            async with browser.new_context(**browser_context_config) as detection_context:
+            async with await browser.new_context(**browser_context_config) as detection_context:
                 page = await detection_context.new_page()
                 await page.goto(site_url, wait_until="domcontentloaded", timeout=60000)
                 
@@ -157,7 +157,7 @@ async def run_sequential_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnaly
         # Execution Phase
         site_scenario_results = []
         for scenario in scenarios_to_run:
-            async with browser.new_context(**browser_context_config) as analysis_context:
+            async with await browser.new_context(**browser_context_config) as analysis_context:
                 result = await process_site_scenario(
                     analysis_context, analyzer, site_url, scenario, site_dump_folder, 
                     search_keywords_config
