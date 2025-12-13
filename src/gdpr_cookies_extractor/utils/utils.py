@@ -9,20 +9,20 @@ from ..analysis.models import SiteAnalysisResult
 
 logger = logging.getLogger(__name__)
 
-def sanitize_filename(url: str) -> str:
+def sanitize_filename(website_url: str) -> str:
     """
     Sanitizes a URL to be used as a safe directory name.
     """
-    if not url.startswith(('http://', 'https://')):
-        url = 'https://' + url
-    parsed_url = urlparse(url)
+    if not website_url.startswith(('http://', 'https://')):
+        website_url = 'https://' + website_url
+    parsed_url = urlparse(website_url)
     # Replace dots with underscores in the netloc for safety
     sanitized = parsed_url.netloc.replace(".", "_")
     return sanitized
 
-def get_site_output_dir(site_url: str) -> str:
+def get_site_output_dir(website_url: str) -> str:
     """Constructs the path to the output directory for a specific site."""
-    return os.path.join("output", sanitize_filename(site_url))
+    return os.path.join("output", sanitize_filename(website_url))
 
 def save_site_results(results: List[SiteAnalysisResult]):
     """
@@ -33,8 +33,8 @@ def save_site_results(results: List[SiteAnalysisResult]):
         return
 
     # All results in the list should be for the same site
-    site_url = results[0].site_url 
-    site_dir = get_site_output_dir(site_url)
+    website_url = results[0].website_url 
+    site_dir = get_site_output_dir(website_url)
     os.makedirs(site_dir, exist_ok=True)
 
     filepath = os.path.join(site_dir, "results.json")
@@ -43,7 +43,7 @@ def save_site_results(results: List[SiteAnalysisResult]):
         results_dicts = [asdict(r) for r in results]
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(results_dicts, f, indent=4, ensure_ascii=False)
-        logger.info(f"Saved {len(results)} scenario results for '{site_url}' to '{filepath}'")
+        logger.info(f"Saved {len(results)} scenario results for '{website_url}' to '{filepath}'")
     except Exception as e:
         logger.error(f"Failed to save result to {filepath}: {e}")
 
