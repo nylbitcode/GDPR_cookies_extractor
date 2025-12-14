@@ -89,12 +89,11 @@ async def process_site_scenario(
             if not page.url or urlparse(page.url).netloc != urlparse(result.website_url).netloc:
                  await page.goto(result.website_url, wait_until="domcontentloaded", timeout=60000)
 
-            llm_output, pp_links = await analyzer.find_privacy_policy(
+            llm_output, _ = await analyzer.find_privacy_policy(
                 context, page.url, site_dump_folder,
                 filter_keywords=search_keywords_config.get('privacy_policy', []),
             )
             result.update_llm_output(llm_output)
-            result.simple_extractor_links["privacy_policy"] = pp_links
             if llm_output.get("privacy_policy_url"):
                 result.privacy_policy_url = urljoin(page.url, llm_output.get("privacy_policy_url"))
         elif 'find-pp' in tasks:
@@ -104,33 +103,29 @@ async def process_site_scenario(
         if result.privacy_policy_url:
             if 'find-cd' in tasks and not result.analyses.cookie_declaration:
                 logger.info("Running task: 'find-cd'")
-                res, links = await analyzer.find_cookie_declaration_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
+                res, _ = await analyzer.find_cookie_declaration_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
                 result.analyses.cookie_declaration = res
-                result.simple_extractor_links["cookie_declaration"] = links
             elif 'find-cd' in tasks:
                 logger.info("Skipping task 'find-cd': already completed.")
 
             if 'find-retention' in tasks and not result.analyses.data_retention:
                 logger.info("Running task: 'find-retention'")
-                res, links = await analyzer.find_data_retention_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
+                res, _ = await analyzer.find_data_retention_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
                 result.analyses.data_retention = res
-                result.simple_extractor_links["data_retention"] = links
             elif 'find-retention' in tasks:
                 logger.info("Skipping task 'find-retention': already completed.")
                 
             if 'find-delete' in tasks and not result.analyses.data_deletion:
                 logger.info("Running task: 'find-delete'")
-                res, links = await analyzer.find_data_deletion_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
+                res, _ = await analyzer.find_data_deletion_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
                 result.analyses.data_deletion = res
-                result.simple_extractor_links["data_deletion"] = links
             elif 'find-delete' in tasks:
                 logger.info("Skipping task 'find-delete': already completed.")
 
             if 'find-dpo' in tasks and not result.analyses.dpo:
                 logger.info("Running task: 'find-dpo'")
-                res, links = await analyzer.find_dpo_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
+                res, _ = await analyzer.find_dpo_page(context, result.privacy_policy_url, site_dump_folder, search_keywords_config)
                 result.analyses.dpo = res
-                result.simple_extractor_links["dpo"] = links
             elif 'find-dpo' in tasks:
                 logger.info("Skipping task 'find-dpo': already completed.")
         

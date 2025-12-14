@@ -80,9 +80,8 @@ class SiteAnalysisResult:
     # Privacy Policy Info ('find-pp' task)
     privacy_policy_url: Optional[str] = None
     
-    # LLM analysis of the privacy policy and other collected links
+    # LLM analysis of the privacy policy
     llm_privacy_policy_analysis: Dict[str, Any] = field(default_factory=dict)
-    simple_extractor_links: Dict[str, List[ExtractedLink]] = field(default_factory=dict)
 
     # Sub-analyses of the privacy policy ('analyze-pp' tasks)
     analyses: Analyses = field(default_factory=Analyses)
