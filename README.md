@@ -4,7 +4,7 @@ This tool automates the analysis of websites for GDPR compliance regarding cooki
 
 ## Features
 
-- **Task-Based Execution**: Run specific analysis tasks independently (e.g., only scrape cookies, or only find the DPO).
+- **Task-Based Execution**: Run specific analysis tasks independently (e.g., only analyze cookies, or only find the DPO).
 - **Automatic Dependency Management**: If a task requires a prerequisite (e.g., finding the DPO requires the privacy policy page), the script runs the prerequisite task automatically.
 - **Incremental Analysis & Resuming**: Results are saved per-site. The script automatically detects completed tasks and only runs what's necessary, allowing you to stop and resume analysis at any time.
 - **Multi-scenario Cookie Analysis**: Tests website behavior for different consent choices (e.g., initial visit, accepting all).
@@ -71,7 +71,7 @@ This flag specifies which analysis tasks to run. If not provided, it defaults to
 | Task           | Description                                                                                             |
 |----------------|---------------------------------------------------------------------------------------------------------|
 | `all`          | **(Default)** Runs all available analysis tasks.                                                        |
-| `scrape`       | Scrapes and categorizes cookies for each defined scenario (initial, accept, etc.).                      |
+| `cookies`       | Scrapes and categorizes cookies for each defined scenario (initial, accept, etc.).                      |
 | `find-pp`      | Finds the URL of the main privacy policy page.                                                          |
 | `analyze-pp`   | A meta-task that runs all sub-analyses on the privacy policy (`find-cd`, `find-dpo`, etc.).             |
 | `find-cd`      | Finds the Cookie Declaration page. (Depends on `find-pp`)
@@ -86,9 +86,9 @@ This flag specifies which analysis tasks to run. If not provided, it defaults to
 poetry run main --url https://www.example.com --tasks all
 ```
 
-**Analyze all sites in `sites.csv`, but only scrape cookies:**
+**Analyze all sites in `sites.csv`, but only analyze cookies:**
 ```bash
-poetry run main --file sites.csv --tasks scrape
+poetry run main --file sites.csv --tasks cookies
 ```
 
 **Find the privacy policy for all sites:**
@@ -102,9 +102,9 @@ poetry run main --file sites.csv --tasks find-pp
 poetry run main --file sites.csv --tasks find-dpo
 ```
 
-**Run both scraping and all privacy policy analyses:**
+**Run both cookie analysis and all privacy policy analyses:**
 ```bash
-poetry run main --file sites.csv --tasks scrape analyze-pp
+poetry run main --file sites.csv --tasks cookies analyze-pp
 ```
 
 ### Docker Execution
@@ -128,11 +128,11 @@ docker run -it --rm \
 ```
 *(Add `--gpus all` after `docker run` if you have a compatible GPU to accelerate LLM work.)*
 
-**To analyze a single site for a specific task (e.g., `scrape`):**
+**To analyze a single site for a specific task (e.g., `cookies`):**
 ```bash
 docker run -it --rm \
  -v ./output:/app/output \
  -v ./logs:/app/logs \
  gdpr_extractor \
- poetry run main --url https://www.example.com --tasks scrape
+ poetry run main --url https://www.example.com --tasks cookies
 ```

@@ -50,9 +50,9 @@ async def process_site_scenario(
 
         page = await context.new_page()
         
-        # --- Task: Scrape Cookies ('scrape') ---
-        if 'scrape' in tasks and not result.cookies:
-            logger.info("Running task: 'scrape'")
+        # --- Task: Analyze Cookies ('cookies') ---
+        if 'cookies' in tasks and not result.cookies:
+            logger.info("Running task: 'cookies'")
             await page.goto(result.website_url, wait_until="domcontentloaded", timeout=60000)
             
             if result.scenario != "initial":
@@ -70,8 +70,8 @@ async def process_site_scenario(
                 result.simplified_cookies = simplify_cookies(cookies)
                 result.cookie_categories = await analyzer.categorize_cookies(result.simplified_cookies)
                 result.third_party_cookie_count = count_third_party_cookies(result.website_url, cookies)
-        elif 'scrape' in tasks:
-            logger.info("Skipping task 'scrape': already completed.")
+        elif 'cookies' in tasks:
+            logger.info("Skipping task 'cookies': already completed.")
 
         # --- Dependency Check for all subsequent tasks ---
         # If any sub-analysis is requested, we must have the privacy policy URL.
@@ -224,14 +224,14 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--url", type=str, help="A single URL to analyze.")
     group.add_argument("--file", type=str, nargs='?', default="sites.csv", help="Path to a CSV file of URLs. Defaults to 'sites.csv'.")
 
-    tasks = ["all", "scrape", "find-pp", "analyze-pp", "find-cd", "find-dpo", "find-delete", "find-retention"]
+    tasks = ["all", "cookies", "find-pp", "analyze-pp", "find-cd", "find-dpo", "find-delete", "find-retention"]
     parser.add_argument(
         "--tasks", 
         nargs='+', 
         default=["all"], 
         choices=tasks, 
         help=(
-            "Specify which tasks to run. 'all' runs every task. 'scrape' handles cookies. "
+            "Specify which tasks to run. 'all' runs every task. 'cookies' handles cookies. "
             "'find-pp' finds the privacy policy. 'analyze-pp' runs all sub-analyses on the privacy policy "
             "(find-cd, find-dpo, etc.)."
         )
@@ -244,15 +244,15 @@ def parse_args() -> argparse.Namespace:
     requested_tasks = set(args.tasks)
     
     # Define task groups
-    all_tasks = {'scrape', 'find-pp', 'find-cd', 'find-dpo', 'find-delete', 'find-retention'}
+    all_tasks = {'cookies', 'find-pp', 'find-cd', 'find-dpo', 'find-delete', 'find-retention'}
     analyze_pp_tasks = {'find-cd', 'find-dpo', 'find-delete', 'find-retention'}
 
     if "all" in requested_tasks:
         final_tasks = all_tasks
     else:
         final_tasks = set()
-        if "scrape" in requested_tasks:
-            final_tasks.add("scrape")
+        if "cookies" in requested_tasks:
+            final_tasks.add("cookies")
         if "find-pp" in requested_tasks:
             final_tasks.add("find-pp")
         
