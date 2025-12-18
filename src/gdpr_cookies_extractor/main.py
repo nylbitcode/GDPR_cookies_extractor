@@ -180,6 +180,11 @@ async def run_sequential_analyses(sites_df: pd.DataFrame, analyzer: PrivacyAnaly
             # Get existing result or create a new one
             result_obj = existing_results_map.get(scenario, SiteAnalysisResult(website_url=site_url, scenario=scenario))
             
+            # If a privacy policy URL is provided via CLI, inject it into the result object
+            if args.privacy_policy_url and not result_obj.privacy_policy_url:
+                logger.info(f"Using provided privacy policy URL: {args.privacy_policy_url}")
+                result_obj.privacy_policy_url = args.privacy_policy_url
+                
             async with await browser.new_context(**browser_context_config) as analysis_context:
                 # process_site_scenario modifies the result_obj in place
                 processed_result = await process_site_scenario(

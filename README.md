@@ -61,9 +61,10 @@ The script is now task-driven. You specify which site(s) to analyze and which ta
 poetry run main <input_option> --tasks <task_1> <task_2> ...
 ```
 
-### Input Options (Choose one)
+### Input Options
 - `--url <url>`: Analyze a single URL.
 - `--file [path/to/file.csv]`: Analyze all URLs in a CSV file. If no path is given, it defaults to `sites.csv`.
+- `--privacy-policy-url <url>`: Manually provide the URL to the privacy policy page. This skips the `find-pp` task and is useful for running dependent tasks like `find-dpo` directly.
 
 ### Task Options (`--tasks`)
 This flag specifies which analysis tasks to run. If not provided, it defaults to `all`.
@@ -96,10 +97,9 @@ poetry run main --file sites.csv --tasks cookies
 poetry run main --file sites.csv --tasks find-pp
 ```
 
-**After finding the privacy policy, find the DPO information:**
-(The script will load the previously found policy URL and use it)
+**Run a DPO search directly, providing the known privacy policy URL:**
 ```bash
-poetry run main --file sites.csv --tasks find-dpo
+poetry run main --url https://www.example.com --privacy-policy-url https://www.example.com/privacy --tasks find-dpo
 ```
 
 **Run both cookie analysis and all privacy policy analyses:**
