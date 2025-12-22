@@ -7,38 +7,27 @@ from typing import Dict, Any, List, Optional, Tuple
 from .llm_interface import AbstractLLMClient
 from .models import ExtractedLink, CookieCategory, CategorizedCookie
 from dataclasses import asdict
+from .scraper import _dump_snapshot
 logger = logging.getLogger(__name__)
 
 class PrivacyAnalyzer:
     """
     Analyzes privacy policies and cookie data using a provided LLM client.
+    Can operate in a no-LLM mode where it only performs heuristic-based analysis.
     """
     
-    def __init__(self, llm_client: AbstractLLMClient):
+    def __init__(self, llm_client: Optional[AbstractLLMClient] = None, no_llm: bool = False):
         self.llm_client = llm_client
-        logger.info(f"PrivacyAnalyzer initialized with client: {type(llm_client).__name__}")
-
-    async def _dump_snapshot(self, page, site_dump_folder: str, phase: str, all_links: List[ExtractedLink]):
-        """Dumps the HTML and all extracted links for a specific analysis phase."""
-        try:
-            # Ensure the site-specific dump directory exists
-            os.makedirs(site_dump_folder, exist_ok=True)
-            
-            # Dump HTML
-            html_content = await page.content()
-            html_dump_path = os.path.join(site_dump_folder, f"{phase}.html")
-            with open(html_dump_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
-
-            # Dump all links
-            links_dump_path = os.path.join(site_dump_folder, f"{phase}_links.json")
-            with open(links_dump_path, "w", encoding="utf-8") as f:
-                json.dump([asdict(link) for link in all_links], f, indent=4, ensure_ascii=False)
-            
-            logger.info(f"Dumped snapshot for phase '{phase}' to {site_dump_folder}")
-
-        except Exception as e:
-            logger.error(f"Failed to dump snapshot for phase '{phase}': {e}")
+        self.no_llm = no_llm
+        
+        if self.no_llm:
+            logger.info("PrivacyAnalyzer initialized in no-LLM mode.")
+            if self.llm_client:
+                logger.warning("An LLM client was provided, but no-LLM mode is active. The client will not be used.")
+        elif not self.llm_client:
+            raise ValueError("LLM-based analysis requires an llm_client, but none was provided.")
+        else:
+            logger.info(f"PrivacyAnalyzer initialized with client: {type(llm_client).__name__}")
 
     # Privacy Policy Methods
     async def _extract_policy_url_from_html(self, html_content: str, url: str, promising_links: List[str]):
@@ -103,7 +92,7 @@ class PrivacyAnalyzer:
 
             # Get all internal links and dump snapshot
             all_links_objects = await self._extract_all_internal_links(page)
-            await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
+            await _dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             
             # Filter for promising links based on keywords
             promising_links_objects = self._filter_promising_links(all_links_objects, user_keywords)
@@ -170,15 +159,39 @@ class PrivacyAnalyzer:
             if page:
                 await page.close()
 
-    async def find_privacy_policy(self, context, site_url: str, site_dump_folder: str, filter_keywords: Optional[List[str]] = None) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    async def _find_privacy_policy_no_llm_worker(self, page, site_dump_folder: str, filter_keywords: Optional[List[str]] = None) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+        """
+        [WORKER FUNCTION]
+        Analyzes a page for a policy link using only heuristics.
+        """
+        try:
+            logger.info(f"Analyzing page {page.url} for privacy policy in no-LLM mode...")
+            await page.wait_for_timeout(3000)  # Wait for dynamic content
+
+            all_links = await self._extract_all_internal_links(page)
+            await _dump_snapshot(page, site_dump_folder, "find_privacy_policy_no_llm", all_links)
+            
+            promising_links = self._filter_promising_links(all_links, filter_keywords)
+            best_url = self._get_best_candidate(promising_links, filter_keywords)
+            
+            return {"privacy_policy_url": best_url, "reasoning": "Heuristic-based selection"}, []
+        except Exception as e:
+            logger.error(f"Error during no-LLM privacy policy search: {e}")
+            return {"privacy_policy_url": None, "reasoning": str(e)}, []
+
+    async def find_privacy_policy(self, page, site_dump_folder: str, filter_keywords: Optional[List[str]] = None) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
         """
         [ORCHESTRATOR FUNCTION]
         Orchestrates the search for the privacy policy URL.
-        It uses _analyze_page_for_policy for both the initial page and the parallel fan-out search.
         """
+        if self.no_llm:
+            return await self._find_privacy_policy_no_llm_worker(page, site_dump_folder, filter_keywords)
+
+        # LLM-based approach
         found_policies = []
         initial_result = None
         link_extraction_phases = []
+        site_url = page.url
         
         try:
             logger.info(f"Starting privacy policy search for {site_url}...")
@@ -187,25 +200,20 @@ class PrivacyAnalyzer:
             base_netloc = urlparse(site_url).netloc
             root_domain = base_netloc[4:] if base_netloc.startswith("www.") else base_netloc
             
-            # INITIAL ANALYSIS 
-            initial_page = await context.new_page()
-            
+            # The page is already created and passed in, we just use it for analysis
             initial_result, initial_links = await self._analyze_page_for_policy(
-                initial_page, site_url, site_dump_folder, 0, root_domain, filter_keywords
+                page, site_url, site_dump_folder, 0, root_domain, filter_keywords
             )
             link_extraction_phases.extend(initial_links)
             
             if initial_result and initial_result.get("privacy_policy_url"):
                 found_policies.append(initial_result)
 
-
             # FINAL SELECTION
             if found_policies:
-                # Use a hybrid score to find the best policy
                 def calculate_hybrid_score(policy):
                     confidence = policy.get('confidence_score', 0.0)
                     bonus = policy.get('keyword_bonus', 0.0)
-                    # Score is 70% confidence, 30% bonus
                     return (0.7 * confidence) + (0.3 * bonus)
 
                 best_policy = max(found_policies, key=calculate_hybrid_score)
@@ -214,7 +222,6 @@ class PrivacyAnalyzer:
                 logger.info(f"Selected best privacy policy with hybrid score {hybrid_score:.2f}: {best_policy.get('privacy_policy_url')}")
                 return best_policy, link_extraction_phases
 
-            # If no policies were found return the empty initial result
             logger.info("No privacy policy found after deep search.")
             return initial_result, link_extraction_phases
         
@@ -312,6 +319,8 @@ class PrivacyAnalyzer:
         - Validate the content of the separate page with another LLM call.
         - Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
         """
+        if self.no_llm:
+            return {"status": "skipped", "reason": "No-LLM mode"}, []
         if not privacy_policy_url:
             return {"cookie_declaration_url": None, "reasoning": "No privacy policy URL provided."}, []
 
@@ -328,7 +337,7 @@ class PrivacyAnalyzer:
 
             # Snapshot 
             all_links_objects = await self._extract_all_internal_links(page)
-            await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
+            await _dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             cookie_keywords = search_keywords_config.get('cookie_declaration', [])
             promising_links_objects = self._filter_promising_links(all_links_objects, cookie_keywords)
 
@@ -512,6 +521,8 @@ class PrivacyAnalyzer:
         - Validate the content of the separate page.
         - Prefer the dedicated page if found and validated, otherwise fall back to the initial page.
         """
+        if self.no_llm:
+            return {"status": "skipped", "reason": "No-LLM mode"}, []
         if not privacy_policy_url:
             return {"data_retention_url": None, "reasoning": "No privacy policy URL provided."}, []
 
@@ -528,7 +539,7 @@ class PrivacyAnalyzer:
             
             # Snapshot
             all_links_objects = await self._extract_all_internal_links(page)
-            await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
+            await _dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             data_retention_keywords = search_keywords_config.get('data_retention', [])
             promising_links_objects = self._filter_promising_links(all_links_objects, data_retention_keywords)
 
@@ -709,6 +720,8 @@ class PrivacyAnalyzer:
         """
         Finds the data deletion page using a multi-stage hybrid analysis.
         """
+        if self.no_llm:
+            return {"status": "skipped", "reason": "No-LLM mode"}, []
         if not privacy_policy_url:
             return {"data_deletion_url": None, "reasoning": "No privacy policy URL provided."}, []
 
@@ -725,7 +738,7 @@ class PrivacyAnalyzer:
             
             # --- Snapshot and Link Extraction
             all_links_objects = await self._extract_all_internal_links(page)
-            await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
+            await _dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             data_deletion_keywords = search_keywords_config.get('data_deletion', [])
             promising_links_objects = self._filter_promising_links(all_links_objects, data_deletion_keywords)
             
@@ -909,6 +922,8 @@ class PrivacyAnalyzer:
         """
         Finds the DPO contact page using a multi-stage hybrid analysis.
         """
+        if self.no_llm:
+            return {"status": "skipped", "reason": "No-LLM mode"}, []
         if not privacy_policy_url:
             return {"dpo_url": None, "reasoning": "No privacy policy URL provided."}, []
 
@@ -925,7 +940,7 @@ class PrivacyAnalyzer:
 
             # Snapshot
             all_links_objects = await self._extract_all_internal_links(page)
-            await self._dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
+            await _dump_snapshot(page, site_dump_folder, phase_name, all_links_objects)
             dpo_keywords = search_keywords_config.get('dpo', [])
             promising_links_objects = self._filter_promising_links(all_links_objects, dpo_keywords)
             
@@ -1026,6 +1041,8 @@ class PrivacyAnalyzer:
         """
         Categorizes a list of cookies using the LLM.
         """
+        if self.no_llm:
+            return []
         if not cookies_data:
             return []
 

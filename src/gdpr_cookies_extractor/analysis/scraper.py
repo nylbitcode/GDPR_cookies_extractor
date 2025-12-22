@@ -1,9 +1,36 @@
 import logging
 import json
+import os
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
+from typing import List
+from dataclasses import asdict
+from .models import ExtractedLink
 
 logger = logging.getLogger(__name__)
+
+async def _dump_snapshot(page, site_dump_folder: str, phase: str, all_links: List[ExtractedLink]):
+    """Dumps the HTML and all extracted links for a specific analysis phase."""
+    try:
+        # Ensure the site-specific dump directory exists
+        os.makedirs(site_dump_folder, exist_ok=True)
+        
+        # Dump HTML
+        html_content = await page.content()
+        html_dump_path = os.path.join(site_dump_folder, f"{phase}.html")
+        with open(html_dump_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        # Dump all links
+        links_dump_path = os.path.join(site_dump_folder, f"{phase}_links.json")
+        with open(links_dump_path, "w", encoding="utf-8") as f:
+            json.dump([asdict(link) for link in all_links], f, indent=4, ensure_ascii=False)
+        
+        logger.info(f"Dumped snapshot for phase '{phase}' to {site_dump_folder}")
+
+    except Exception as e:
+        logger.error(f"Failed to dump snapshot for phase '{phase}': {e}")
+
 
 def load_selectors_from_config():
     """Loads cookie banner selectors from config.json."""
