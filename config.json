@@ -1,6 +1,8 @@
 {
   "llm": {
-    "model": "llama3"
+    "provider": "gemini",
+    "model": "gemini-2.5-fast",
+    "gemini_api_key": ""
   },
   "browser_context_options": {
     "locale": "en-GB",

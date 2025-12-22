@@ -25,11 +25,16 @@ from .utils.utils import (
 )
 from .analysis.scraper import handle_cookie_banner
 from .analysis.ollama_providers import OllamaProvider
+from .analysis.gemini_provider import GeminiProvider
 from .analysis.privacy_analyzers import PrivacyAnalyzer
 from .analysis.models import SiteAnalysisResult
 
 logger = logging.getLogger(__name__)
 
+LLM_PROVIDERS = {
+    "ollama": OllamaProvider,
+    "gemini": GeminiProvider,
+}
 
 async def process_site_scenario(
     context, 
@@ -213,7 +218,13 @@ async def gdpr_analysis(sites_df: pd.DataFrame, args: argparse.Namespace):
     
     llm_provider = None
     if not args.no_llm:
-        llm_provider = OllamaProvider(model=llm_config.get('model', 'llama3'))
+        provider_name = llm_config.get('provider', 'ollama')
+        provider_class = LLM_PROVIDERS.get(provider_name)
+        
+        if not provider_class:
+            raise ValueError(f"Unsupported LLM provider: {provider_name}")
+            
+        llm_provider = provider_class(llm_config)
     
     analyzer = PrivacyAnalyzer(llm_client=llm_provider, no_llm=args.no_llm)
     

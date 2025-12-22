@@ -77,31 +77,24 @@ async def handle_cookie_banner(page, action="accept", click: bool = True):
 
     for selector in target_selectors:
         try:
-            # Crea il locator ma NON eseguire ancora azioni che richiedono unicità
             locators = page.locator(selector)
             
-            # Conta quanti elementi corrispondono al selettore (es. 3 bottoni "Accept")
             count = await locators.count()
             
-            # Li controlliamo uno per uno
             for i in range(count):
-                element = locators.nth(i) # Prendi il riferimento all'i-esimo elemento
+                element = locators.nth(i)
                 
-                # Controlla se QUESTO specifico elemento è visibile
-                # Usiamo un timeout breve perché stiamo ciclando su vari candidati
                 if await element.is_visible(timeout=2000):
                     if click:
                         logger.info(f"Clicking '{action}' button (match {i+1}/{count}) with selector: {selector}")
-                        # Forza il click se necessario, o usa il click standard
                         await element.click()
                         await page.wait_for_timeout(2000)
                     else:
                         logger.info(f"Found '{action}' button (match {i+1}/{count}) with selector: {selector} (no click)")
                     
-                    return True # Trovato e gestito, usciamo con successo
+                    return True 
                     
         except Exception as e:
-            # logger.debug(f"Selector failed: {selector} - {e}")
             continue
     
     logger.info(f"No '{action}' button found for this site.")

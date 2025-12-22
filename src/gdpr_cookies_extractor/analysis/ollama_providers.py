@@ -10,14 +10,10 @@ class OllamaProvider(AbstractLLMClient):
     The concrete implementation for the Ollama provider.
     """
     
-    def __init__(self, 
-                 model: str = 'llama3', 
-                 default_system_prompt: str = 'You are a helpful assistant that provides only a clean JSON output about GDPR and privacy.'):
-        
-        self.model = model
-        self.default_system_prompt = default_system_prompt
+    def __init__(self, config: dict):
+        self.model = config.get('model', 'llama3')
+        self.default_system_prompt = config.get('default_system_prompt', 'You are a helpful assistant that provides only a clean JSON output about GDPR and privacy.')
         self.client = ollama.AsyncClient() 
-
         logger.info(f"OllamaProvider initialized with model: {self.model}")
 
     async def query_json(self, 
