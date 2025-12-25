@@ -4,7 +4,6 @@ import json
 import logging
 from typing import Optional, Dict, Any
 
-# Make sure to install the library: poetry add google-generativeai
 try:
     import google.generativeai as genai
 except ImportError:
@@ -33,10 +32,6 @@ class GeminiProvider(AbstractLLMClient):
     async def query_json(self, user_prompt: str, system_prompt: str = None) -> LLMResponse:
         """
         Sends a prompt to the Gemini API and expects a JSON response.
-        
-        Note: The 'system_prompt' for Gemini is handled differently. It's often
-        the first message in the history with the 'system' role. Here we will
-        pass it as part of the contents.
         """
         contents = []
         if system_prompt:
@@ -45,7 +40,7 @@ class GeminiProvider(AbstractLLMClient):
         
         raw_content = ""
         try:
-            # Gemini requires specific generation config for JSON output
+            
             generation_config = genai.types.GenerationConfig(
                 response_mime_type="application/json",
                 temperature=0.0
@@ -59,8 +54,6 @@ class GeminiProvider(AbstractLLMClient):
             raw_content = response.text
             logger.debug(f"Raw Gemini response: {raw_content}")
             
-            # The response from Gemini with response_mime_type="application/json" should be a valid JSON string already
-            # but we can still use the parser for safety.
             json_string = self._parse_json_response(raw_content)
             parsed_data = json.loads(json_string)
             
