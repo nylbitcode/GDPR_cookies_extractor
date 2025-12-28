@@ -4,7 +4,7 @@
     "model": "llama3"
   },
   "browser_context_options": {
-    "locale": "en-GB",
+    "locale": "it-IT",
     "timezone_id": "Europe/Rome",
     "geolocation": {
       "longitude": 12.4964,
@@ -19,67 +19,67 @@
   "scraper": {
     "cookie_banners": {
       "accept_selectors": [
-        "text=Accept",
-        "text=Accept All",
+        "text=Accetta",
+        "text=Accetta tutto",
         "text=OK",
-        "role=button[name='Accept']",
-        "role=button[name='Accept All']",
+        "role=button[name='Accetta']",
+        "role=button[name='Accetta tutto']",
         "role=button[name='OK']"
       ],
       "reject_selectors": [
-        "text=Reject",
-        "text=Reject All",
-        "text=Deny",
-        "role=button[name='Reject']",
-        "role=button[name='Reject All']",
-        "role=button[name='Deny']"
+        "text=Rifiuta",
+        "text=Rifiuta tutto",
+        "text=Nega",
+        "role=button[name='Rifiuta']",
+        "role=button[name='Rifiuta tutto']",
+        "role=button[name='Nega']"
       ],
       "only_essential_selectors": [
-        "text=Only Essential",
-        "text=Essential Cookies",
-        "text=Accept Essential",
-        "role=button[name='Only Essential']",
-        "role=button[name='Essential Cookies']",
-        "role=button[name='Accept Essential']"
+        "text=Solo essenziali",
+        "text=Cookie essenziali",
+        "text=Accetta essenziali",
+        "role=button[name='Solo essenziali']",
+        "role=button[name='Cookie essenziali']",
+        "role=button[name='Accetta essenziali']"
       ]
     }
   },
   "search_keywords": {
     "privacy_policy": [
-      "privacy policy",
-      "privacy statement",
-      "privacy center",
+      "informativa sulla privacy",
+      "dichiarazione sulla privacy",
+      "centro privacy",
       "privacy"
     ],
     "cookie_declaration": [
-      "cookies policy",
-      "cookies technologies",
-      "use cookies",
-      "technologies"
+      "politica sui cookie",
+      "tecnologie cookie",
+      "uso dei cookie",
+      "tecnologie"
     ],
     "data_retention": [
-      "data retention",
-      "how long keep data",
-      "retention periods",
-      "retain",
-      "retantnion"
+      "conservazione dei dati",
+      "per quanto tempo conserviamo i dati",
+      "periodi di conservazione",
+      "conservare"
     ],
     "data_deletion": [
-      "delete",
-      "erase",
-      "clear",
-      "manage",
+      "eliminazione dati",
+      "cancellazione dati",
+      "cancellare dati",
+      "gestire dati",
       "dashboard",
-      "processing information"
+      "elaborazione informazioni"
     ],
     "dpo": [
-      "dpo",
+      "rpd",
+      "responsabile della protezione dei dati",
       "data protection",
       "governance",
-      "legal",
-      "rights",
-      "contact",
-      "officer"
+      "legale",
+      "diritti",
+      "contatto",
+      "ufficiale"
     ]
   }
 }
