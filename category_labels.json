@@ -1,0 +1,22 @@
+{
+  "PP": {
+    "label": "Informativa sulla Privacy",
+    "description": "Informazioni relative all'informativa sulla privacy del sito web."
+  },
+  "CD": {
+    "label": "Dichiarazione Cookie",
+    "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie."
+  },
+  "DPO": {
+    "label": "Responsabile della Protezione dei Dati (DPO)",
+    "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO)."
+  },
+  "DL": {
+    "label": "Eliminazione dei Dati",
+    "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali."
+  },
+  "RT": {
+    "label": "Conservazione dei Dati",
+    "description": "Informazioni sui periodi di conservazione dei dati personali."
+  }
+}
