@@ -1,0 +1,865 @@
+{
+  "amazon_it": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "LLM links analysis",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "WRONG",
+      "description": "there was maybe a contact, which is this 'Further, the data protection officer for the above-mentioned data controllers can be contacted at eu-privacy@amazon.it.' It repoerted 'Controllers of Personal Information' this section which can often are connected to DPO, but the actual DPO section is different.",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "",
+      "value": ""
+    }
+  },
+  "apple_com": {
+    "PP": {
+      "label": "FOUND",
+      "description": "correct but like micsoft has a main page from which you can reach the privacy policy in a more specific way",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "cloudflare_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "llm link",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "the info reported are correct but there is also a specific cookie policy page reachable cookie section it reports",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "perfect fit with also mail result",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "no specific section so it's ok. it found a part that speaks about data deletion",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info about the section but few info even if also the sites there are no specific details so could be ok",
+      "value": ""
+    }
+  },
+  "consent_yahoo_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper.",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "there was a specific link so it very strange it didn't manage to find it.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "found with also mail",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "speicifc page found",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "informatio are specific and correct. the sentence are extraced from the page.",
+      "value": ""
+    }
+  },
+  "dev_appsflyer_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "the link doesn't exist",
+      "value": ""
+    },
+    "CD": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DPO": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DL": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "",
+      "description": "",
+      "value": ""
+    }
+  },
+  "digicert_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "NOT_FOUND",
+      "value": ""
+    },
+    "DPO": {
+      "label": "NOT_FOUND",
+      "description": "",
+      "value": ""
+    },
+    "DL": {
+      "label": "NOT_FOUND",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "NOT_FOUND",
+      "description": "",
+      "value": ""
+    }
+  },
+  "dzen_ru": {
+    "PP": {
+      "label": "WRONG",
+      "description": "",
+      "value": ""
+    },
+    "CD": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DPO": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DL": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "",
+      "description": "",
+      "value": ""
+    }
+  },
+  "facebook_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper notice that there is the general one",
+      "value": ""
+    },
+    "CD": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "found some good senctences like 'Informazioni provenienti da cookie e tecnologie simili' but there are no speicif section in the main page. The cookie page is hidden at 2 clicks",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "found perfetc section that then links to the contacts",
+      "value": ""
+    },
+    "DL": {
+      "label": "WRONG",
+      "description": "bad reasoning but there is no a speicific section on the page. ",
+      "value": ""
+    },
+    "RT": {
+      "label": "WRONG",
+      "description": "there was a specific section and reported wrong section",
+      "value": ""
+    }
+  },
+  "fastly_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "there is a section talking about it but there is also a specific cookie policy page linked in the cookie section",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info and found also the mail",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info found on the main privacy page. there is no  specific section and you have to gather info from different parts of the page",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "found specific section with correct info and mentioned it",
+      "value": ""
+    }
+  },
+  "gandi_net": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "found a specific section and reported it with correct information",
+      "value": ""
+    },
+    "DPO": {
+      "label": "WRONG",
+      "description": "the section mentioned could make sense but there are specific info and mail about dpo that has not been reported",
+      "value": ""
+    },
+    "DL": {
+      "label": "HALLUCINATED",
+      "description": "it merged some info from different parts of the page but there is no specific section talking about data deletion",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "there is a specific section talking about data retention and the info reported are correct but the title is slightly different",
+      "value": ""
+    }
+  },
+  "github_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "reported correct info about the section on page but there is also a specific cookie policy page linked in the cookie section",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "found a correct section but I didn't manage to find the mail menntinioed and the correct mail was difficult to report since was wrtitten in this way: Data Protection Officer at dpo[at]github[dot]com",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "specific section mentioned with correct info",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "specific section mentioned with correct info",
+      "value": ""
+    }
+  },
+  "google_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "specific section mentioned with correct info but there is also a specific cookie policy page linked in the cookie section",
+      "value": ""
+    },
+    "DPO": {
+      "label": "WRONG",
+      "description": "there is no specific info in the the page but the one reported is about general info on the policy not about DPO",
+      "value": ""
+    },
+    "DL": {
+      "label": "WRONG",
+      "description": "wrong section while there is a specific one ",
+      "value": ""
+    },
+    "RT": {
+      "label": "DEDICATED_PAGE_FOUND",
+      "description": "specific url found with correct info reported",
+      "value": ""
+    }
+  },
+  "icloud_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "final part is correct but belong to apple.com",
+      "value": ""
+    },
+    "CD": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DPO": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DL": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "",
+      "description": "",
+      "value": ""
+    }
+  },
+  "instagram_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "good reasoning and correct sentence reported but in the page is not presente a specific cookie section in the privacy policy. There is a specific cookie policy page hidden at 2 clicks",
+      "value": ""
+    },
+    "DPO": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "there is a contact info but not a specific dpo mail",
+      "value": ""
+    },
+    "DL": {
+      "label": "HALLUCINATED",
+      "description": "wrong reasoning there was a specific link but no section talking about data deletion",
+      "value": ""
+    },
+    "RT": {
+      "label": "WRONG",
+      "description": "wrong reasoning specific section is present in the page",
+      "value": ""
+    }
+  },
+  "it_linkedin_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "mentioned correct section but there was a link to the dedicated page",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct section mentioned properly but reported mail is not real and the form realyy exists",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "mentioned correct section and correct summary of it",
+      "value": ""
+    },
+    "RT": {
+      "label": "WRONG",
+      "description": "there was a specific section but it reported the deletion one",
+      "value": ""
+    }
+  },
+  "it_pinterest_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct section but there was a dedicated page",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct contact info but there was a link to form and it didn't report it. the rest of the info are correct",
+      "value": ""
+    },
+    "DL": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "there is no a clear section",
+      "value": ""
+    },
+    "RT": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info reporeted no specific retentnion",
+      "value": ""
+    }
+  },
+  "it_wikipedia_org": {
+    "PP": {
+      "label": "WRONG",
+      "description": "not so sure where the link come from",
+      "value": ""
+    },
+    "CD": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DPO": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "DL": {
+      "label": "",
+      "description": "",
+      "value": ""
+    },
+    "RT": {
+      "label": "",
+      "description": "",
+      "value": ""
+    }
+  },
+  "it_wordpress_org": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info and section but there was a specific cookie policy page linked in the cookie section.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct section and mail reported",
+      "value": ""
+    },
+    "DL": {
+      "label": "DEDICATED_PAGE_FOUND",
+      "description": "found specific section and reported correct link to perform the request",
+      "value": ""
+    },
+    "RT": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct summary reported, but the specific section is not mentioned",
+      "value": ""
+    }
+  },
+  "mail_ru": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct reasoing but there is a speicific section for cookies",
+      "value": ""
+    },
+    "DPO": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "could be ok there is no specific section about it",
+      "value": ""
+    },
+    "DL": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct section",
+      "value": ""
+    },
+    "RT": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct summary",
+      "value": ""
+    }
+  },
+  "microsoft_com": {
+    "PP": {
+      "label": "FOUND",
+      "description": "more specific page",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "netflix_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "there was a link and a specific section also",
+      "value": ""
+    },
+    "DPO": {
+      "label": "NOT_FOUND",
+      "description": "there was a specific section also",
+      "value": ""
+    },
+    "DL": {
+      "label": "NOT_FOUND",
+      "description": "there was a specific section also"
+    },
+    "RT": {
+      "label": "NOT_FOUND",
+      "description": "there was a specific section also",
+      "value": ""
+    }
+  },
+  "ntp_org": {
+    "PP": {
+      "label": "NOT_FOUND",
+      "description": "not present privacy policy page",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "open_spotify_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "link doesn't exist",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "roblox_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "ok summary but not specific section mentioned",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "specifi section and mail found",
+      "value": ""
+    },
+    "DL": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct summary",
+      "value": ""
+    },
+    "RT": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct summary",
+      "value": ""
+    }
+  },
+  "tiktok_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "HALLUCINATED",
+      "description": "the section reported is not present",
+      "value": ""
+    },
+    "DPO": {
+      "label": "HALLUCINATED",
+      "description": "info reported are not real",
+      "value": ""
+    },
+    "DL": {
+      "label": "HALLUCINATED",
+      "description": "the section provieded is not present",
+      "value": ""
+    },
+    "RT": {
+      "label": "HALLUCINATED",
+      "description": "the section provieded is not present",
+      "value": ""
+    }
+  },
+  "trafficmanager_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "Informazioni relative all'informativa sulla privacy del sito web.",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "vimeo_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "LLM",
+      "value": ""
+    },
+    "CD": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct mentnion but not linked the external page",
+      "value": ""
+    },
+    "DPO": {
+      "label": "FOUND_ON_MAIN_PAGE",
+      "description": "correct info and mail reported",
+      "value": ""
+    },
+    "DL": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "correct info",
+      "value": ""
+    },
+    "RT": {
+      "label": "HALLUCINATED",
+      "description": "wrong section reported",
+      "value": ""
+    }
+  },
+  "whatsapp_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "reported a page where is taling abotu privacy in chat results of scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "workers_cloudflare_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "the link is from cloudflare.com not workers.cloudflare.com so final part is correct",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "x_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "scraper",
+      "value": ""
+    },
+    "CD": {
+      "label": "HALLUCINATED",
+      "description": "section reported doesn't exist and it's too generic",
+      "value": ""
+    },
+    "DPO": {
+      "label": "DEDICATED_PAGE_FOUND",
+      "description": "correct page",
+      "value": ""
+    },
+    "DL": {
+      "label": "INFERRED_FROM_MAIN_PAGE",
+      "description": "no specific section correct summary",
+      "value": ""
+    },
+    "RT": {
+      "label": "HALLUCINATED",
+      "description": "there is a specific section and is not reported ther other info are wrong",
+      "value": ""
+    }
+  },
+  "youtube_com": {
+    "PP": {
+      "label": "WRONG",
+      "description": "found a channle about privacy",
+      "value": ""
+    },
+    "CD": {
+      "label": "Dichiarazione Cookie",
+      "description": "Informazioni relative alla dichiarazione dei cookie o alla politica sui cookie.",
+      "value": ""
+    },
+    "DPO": {
+      "label": "Responsabile della Protezione dei Dati (DPO)",
+      "description": "Informazioni di contatto o dettagli relativi al Responsabile della Protezione dei Dati (DPO).",
+      "value": ""
+    },
+    "DL": {
+      "label": "Eliminazione dei Dati",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "Conservazione dei Dati",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  },
+  "zoom_com": {
+    "PP": {
+      "label": "FOUND_PERFECT_FIT",
+      "description": "LLM",
+      "value": ""
+    },
+    "CD": {
+      "label": "NOT_FOUND",
+      "description": "",
+      "value": ""
+    },
+    "DPO": {
+      "label": "WRONG",
+      "description": "good reasoning but there is no specific sectino about dpo",
+      "value": ""
+    },
+    "DL": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sulle procedure per l'eliminazione o la cancellazione dei dati personali.",
+      "value": ""
+    },
+    "RT": {
+      "label": "NOT_FOUND",
+      "description": "Informazioni sui periodi di conservazione dei dati personali.",
+      "value": ""
+    }
+  }
+}
